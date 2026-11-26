@@ -238,10 +238,11 @@ const today = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.ge
 const yesterday = () => { const d=new Date(); d.setDate(d.getDate()-1); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
 function freshState(){
   const done = {}; for(let u=0;u<KNOWN_UNITS;u++) done[u]=LESSONS_PER_UNIT;
-  return {xp:0, streak:0, lastDay:null, dayXp:0, xpDay:null, goal:20, listen:true, rate:0.9, done, mistakes:{}, seen:{}, lessons:0};
+  return {xp:0, streak:0, lastDay:null, dayXp:0, xpDay:null, goal:20, listen:true, rate:0.9, done, mistakes:{}, seen:{}, lessons:0, askedCarry:false, remind:{on:false, time:"19:00", id:null}};
 }
 let S;
 try { S = Object.assign(freshState(), JSON.parse(localStorage.getItem(KEY)||"null")||{}); } catch(e){ S = freshState(); }
+if(!S.remind || typeof S.remind!=="object") S.remind = {on:false, time:"19:00", id:null};
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
 /* ============ AUDIO ============ */
@@ -351,11 +352,83 @@ function renderWords(){
    <div class="card">${list.map(({w})=>`<div class="wordrow"><button class="spk" data-say="${esc(w[0])}">🔊</button><div><b>${esc(w[0])}</b><small>${esc(w[1])}</small></div>${S.mistakes[wordKey(w)]>0?'<span class="dot" title="needs practice"></span>':""}</div>`).join("")}</div>`;
 }
 $("#tab-words").addEventListener("click", e=>{ const s=e.target.closest("[data-say]"); if(s) speak(s.dataset.say); });
+/* ============ STREAK CARRY-OVER ============ */
+function streakFormHtml(){
+  return `<div class="row"><input type="number" inputmode="numeric" min="0" max="9999" class="carryNum" value="${liveStreak()||""}" placeholder="145"
+      style="width:110px;padding:12px;border-radius:12px;background:var(--bg);color:var(--text);border:2px solid var(--line);font-size:18px;font-weight:800">
+      <span style="color:var(--muted)">days, last practiced:</span></div>
+    <div class="seg carryDay" style="margin-top:10px"><button data-d="y" class="${S.lastDay===today()?"":"on"}">Yesterday</button><button data-d="t" class="${S.lastDay===today()?"on":""}">Today</button></div>
+    <button class="btn" style="margin-top:12px" data-carry>Set my streak</button>`;
+}
+function wireStreakForm(root, after){
+  const seg=root.querySelector(".carryDay");
+  seg.onclick = e=>{ const b=e.target.closest("button"); if(!b) return; seg.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); };
+  root.querySelector("[data-carry]").onclick = ()=>{
+    const n = parseInt(root.querySelector(".carryNum").value,10);
+    if(!(n>=0 && n<10000)){ toast("Enter your streak number"); return; }
+    const isToday = seg.querySelector(".on").dataset.d==="t";
+    S.streak = n; S.lastDay = n ? (isToday?today():yesterday()) : null; S.askedCarry = true; save(); syncStreak();
+    toast(n ? `Streak set to ${n} days 🔥` : "Streak cleared");
+    if(after) after(); refresh();
+  };
+}
+function maybeAskCarry(){
+  if(S.askedCarry) return;
+  const m=document.createElement("div"); m.className="modal";
+  m.innerHTML = `<div class="sheet"><div style="text-align:center;font-size:60px">🔥</div><h2 style="text-align:center">Keep your streak</h2>
+    <p style="text-align:center">Coming from Duolingo? Bring your day streak with you so you never start over.</p>
+    ${streakFormHtml()}<button class="btn ghost" style="margin-top:12px" data-skip>Skip</button></div>`;
+  document.body.appendChild(m);
+  wireStreakForm(m, ()=>m.remove());
+  m.querySelector("[data-skip]").onclick = ()=>{ S.askedCarry=true; save(); m.remove(); };
+}
+
+/* ============ DAILY REMINDERS (push from kingdom-ai) ============ */
+const PUSH = "https://push.kingdom-life-ministry.com";
+function fmtTime(t){ const [h,m]=t.split(":").map(Number); return ((h%12)||12)+":"+String(m).padStart(2,"0")+(h<12?" AM":" PM"); }
+function remindStatus(){
+  if(!S.remind.on) return "Get a nudge once a day. It's skipped on days you've already done a lesson.";
+  return `On at ${fmtTime(S.remind.time)}. If you still haven't done a lesson by 9:00 PM, you get one more nudge to save your streak.`;
+}
+async function pushPost(path, body){
+  const r = await fetch(PUSH+path, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body), keepalive:true});
+  if(!r.ok) throw new Error("Reminder server said "+r.status);
+  return r.json().catch(()=>({}));
+}
+function b64ToU8(s){ s=s.replace(/-/g,"+").replace(/_/g,"/"); s+= "=".repeat((4-s.length%4)%4); const raw=atob(s); return Uint8Array.from(raw,c=>c.charCodeAt(0)); }
+function newId(){ return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2)); }
+async function enableReminders(time){
+  if(!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window))
+    throw new Error("Open the installed app (from GitHub Pages) to turn on reminders");
+  const perm = await Notification.requestPermission();
+  if(perm!=="granted") throw new Error("Notifications are blocked. Allow them in the app's settings.");
+  const reg = await navigator.serviceWorker.ready;
+  let key;
+  try{ key = (await (await fetch(PUSH+"/vapid")).json()).key; }catch(e){ throw new Error("Can't reach the reminder server right now"); }
+  const old = await reg.pushManager.getSubscription(); if(old) await old.unsubscribe();
+  const sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64ToU8(key)});
+  S.remind.id = S.remind.id || newId();
+  await pushPost("/subscribe", {id:S.remind.id, sub:sub.toJSON(), time, tz:Intl.DateTimeFormat().resolvedOptions().timeZone, streak:S.streak, lastDay:S.lastDay});
+  S.remind.on = true; S.remind.time = time; save();
+}
+async function disableReminders(){
+  try{ if(S.remind.id) await pushPost("/unsubscribe", {id:S.remind.id}); }catch(e){}
+  try{ const reg=await navigator.serviceWorker.ready; const s=await reg.pushManager.getSubscription(); if(s) await s.unsubscribe(); }catch(e){}
+  S.remind.on=false; save();
+}
+function syncStreak(){ if(S.remind.on && S.remind.id) pushPost("/done", {id:S.remind.id, streak:S.streak, lastDay:S.lastDay}).catch(()=>{}); }
+
 function renderMe(){
   const lv=level(), into=S.xp%100;
   $("#tab-me").innerHTML = `<h2>Me</h2>
    <div class="card"><b style="font-size:20px">Level ${lv}</b><span style="float:right;color:var(--muted)">${into}/100 XP</span><div class="levelbar"><i style="width:${into}%"></i></div>
      <p style="color:var(--muted);margin-bottom:0">🔥 ${liveStreak()} day streak · ⚡ ${S.xp} total XP · ✅ ${S.lessons} lessons</p></div>
+   <div class="card"><b>🔥 Carry over your streak</b><p style="color:var(--muted);margin:6px 0 10px">Coming from Duolingo? Enter your streak so you never start over.</p>
+     ${streakFormHtml()}</div>
+   <div class="card"><b>🔔 Daily reminder</b><p style="color:var(--muted);margin:6px 0 10px" id="remStatus">${remindStatus()}</p>
+     <div class="row"><input type="time" id="remTime" value="${esc(S.remind.time||"19:00")}" style="flex:1;padding:12px;border-radius:12px;background:var(--bg);color:var(--text);border:2px solid var(--line);font-size:16px">
+     <button class="btn blue" style="flex:1.3;padding:13px" id="remOn">${S.remind.on?"Update time":"Turn on"}</button></div>
+     ${S.remind.on?`<div class="row" style="margin-top:12px"><button class="btn ghost" id="remTest">Send test</button><button class="btn ghost" id="remOff">Turn off</button></div>`:""}</div>
    <div class="card"><b>Daily goal</b><p style="color:var(--muted);margin:6px 0 10px">${dayXp()} / ${S.goal} XP today</p>
      <div class="seg" id="goalSeg">${[10,20,30,50].map(g=>`<button data-g="${g}" class="${S.goal===g?"on":""}">${g}</button>`).join("")}</div></div>
    <div class="card"><b>Listening exercises</b><p style="color:var(--muted);margin:6px 0 10px">${canSpeak?"Turn off when you can't use sound.":"Your browser has no speech voice, so listening is off."}</p>
@@ -373,6 +446,12 @@ function renderMe(){
   $("#rateSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; S.rate=+b.dataset.r; save(); renderMe(); speak("Guten Morgen! Wie geht's?"); };
   $("#testVoice").onclick = ()=>{ speak("Hallo! Ich lerne Deutsch."); if(canSpeak && !deVoice) toast("No German voice found. Install German in your phone's text-to-speech settings."); };
   $("#startSet").onclick = ()=>{ const t=+$("#startSel").value; for(let u=0;u<UNITS.length;u++){ if(u<t) S.done[u]=LESSONS_PER_UNIT; else S.done[u]=0; } save(); refresh(); toast("Starting point set to Unit "+(t+1)); };
+  wireStreakForm($("#tab-me"));
+  $("#remOn").onclick = async ()=>{ const b=$("#remOn"); b.disabled=true; b.textContent="Working...";
+    try{ await enableReminders($("#remTime").value||"19:00"); toast("Reminders on! 🔔"); }catch(err){ toast(String(err.message||err)); }
+    renderMe(); };
+  const rt=$("#remTest"); if(rt) rt.onclick = async ()=>{ try{ await pushPost("/test",{id:S.remind.id}); toast("Test sent. Check your notifications."); }catch(err){ toast(String(err.message||err)); } };
+  const ro=$("#remOff"); if(ro) ro.onclick = async ()=>{ await disableReminders(); toast("Reminders off"); renderMe(); };
   $("#resetBtn").onclick = ()=>{ if(confirmReset()) { S=freshState(); save(); refresh(); toast("Progress reset"); } };
 }
 let resetArmed=false;
@@ -614,7 +693,7 @@ function finishLesson(){
   S.xp += gain; S.dayXp += gain; S.lessons++;
   const o=L.opts;
   if(!o.mode && (S.done[o.unit]||0)===o.lesson) S.done[o.unit]=o.lesson+1;
-  save();
+  save(); syncStreak();
   const goalHit = !goalBefore && dayXp()>=S.goal;
   const unitDone = !o.mode && o.lesson===LESSONS_PER_UNIT-1;
   $("#progBar").style.width="100%";
@@ -636,6 +715,7 @@ function finishLesson(){
 
 /* ============ BOOT ============ */
 refresh();
+setTimeout(maybeAskCarry, 400);
 setTimeout(()=>{ const p=currentPos(); const el=document.getElementById("unit-"+p.u); if(el) el.scrollIntoView({block:"start"}); }, 50);
 if("serviceWorker" in navigator && location.protocol==="https:"){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 </script>
