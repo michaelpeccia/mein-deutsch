@@ -56,7 +56,7 @@ button{font-family:inherit;color:inherit}
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--bg);border-top:2px solid var(--line);
   display:flex;justify-content:center;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
 .nav div{display:flex;max-width:560px;width:100%;justify-content:space-around}
-.nav button{background:none;border:2px solid transparent;border-radius:14px;padding:6px 14px;font-size:26px;cursor:pointer}
+.nav button{background:none;border:2px solid transparent;border-radius:14px;padding:6px 10px;font-size:26px;cursor:pointer}
 .nav button.on{border-color:var(--blue);background:rgba(28,176,246,.12)}
 .nav span{display:block;font-size:11px;font-weight:800;color:var(--muted)}
 
@@ -137,8 +137,34 @@ h2{margin:6px 0 14px;font-size:24px}
 .sheet{background:var(--bg);width:100%;max-width:560px;max-height:85vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 18px 30px;border-top:2px solid var(--line)}
 .sheet p{line-height:1.5;color:#d6e3ea}
 .sheet .ex{color:var(--blue);font-weight:800}
-.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--card);border:2px solid var(--line);
+.toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);background:var(--card);border:2px solid var(--line);
   padding:12px 18px;border-radius:14px;font-weight:800;z-index:40;max-width:90%;text-align:center}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scrollbar-width:none}
+.chip{flex:none;border:2px solid var(--line);border-radius:20px;padding:8px 14px;background:var(--card);font-weight:800;font-size:14px;cursor:pointer}
+.chip.on{border-color:var(--blue);color:var(--blue);background:rgba(28,176,246,.12)}
+.chathead{display:flex;align-items:center;gap:12px;padding:12px 16px 0}
+.avatar{width:46px;height:46px;border-radius:50%;background:#ce82ff;display:flex;align-items:center;justify-content:center;font-size:24px;flex:none}
+.chatgoal{flex:1}.chatgoal small{color:var(--muted);font-weight:700}
+.chat{padding:8px 16px 180px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:86%;padding:11px 14px;border-radius:16px;font-size:17px;line-height:1.4;word-wrap:break-word}
+.msg.me{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:var(--card);border:2px solid var(--line);border-bottom-left-radius:4px}
+.msg.ai .en{color:var(--muted);font-size:15px;margin-top:6px;border-top:1px solid var(--line);padding-top:6px}
+.msg.ai .acts{display:flex;gap:14px;margin-top:6px}
+.msg.ai .acts button{background:none;border:none;color:var(--blue);font-weight:800;font-size:14px;padding:0;cursor:pointer}
+.msg.sys{align-self:center;color:var(--muted);font-size:14px;text-align:center}
+.fix{align-self:flex-end;max-width:86%;background:rgba(255,200,0,.08);border:2px solid rgba(255,200,0,.45);border-radius:12px;padding:8px 12px;font-size:15px;line-height:1.4}
+.fix b{color:var(--gold)}
+.typing{align-self:flex-start;color:var(--muted);font-weight:800;padding:6px 4px}
+.typing i{display:inline-block;animation:blink 1.2s infinite}.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.chatbar{position:fixed;left:0;right:0;bottom:70px;z-index:6;background:var(--bg);border-top:2px solid var(--line);padding:10px 12px}
+.chatbar .in{max-width:536px;margin:0 auto;display:flex;gap:8px}
+.chatbar input{flex:1;min-width:0;padding:13px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--text);font-size:16px}
+.icbtn{width:52px;flex:none;border-radius:14px;border:none;font-size:22px;background:var(--blue);box-shadow:0 4px 0 var(--blue-d);cursor:pointer}
+.icbtn.mic{background:var(--card);border:2px solid var(--line);box-shadow:none}
+.icbtn.mic.live{background:var(--red);border-color:var(--red)}
+.icbtn:disabled{opacity:.5}
 .shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 </style>
@@ -155,11 +181,13 @@ h2{margin:6px 0 14px;font-size:24px}
   <div id="tab-learn" class="screen"></div>
   <div id="tab-practice" class="screen pad hidden"></div>
   <div id="tab-words" class="screen pad hidden"></div>
+  <div id="tab-tutor" class="hidden"></div>
   <div id="tab-me" class="screen pad hidden"></div>
 
   <nav class="nav"><div>
     <button data-tab="learn" class="on">🏠<span>Learn</span></button>
     <button data-tab="practice">🏋️<span>Practice</span></button>
+    <button data-tab="tutor">💬<span>Tutor</span></button>
     <button data-tab="words">📖<span>Words</span></button>
     <button data-tab="me">⚙️<span>Me</span></button>
   </div></nav>
@@ -227,7 +255,57 @@ const UNITS = [
  {title:"Comment on food and drink", color:"#58cc02",
   tip:"<p>After <span class='ex'>ist</span>, adjectives keep their plain form: <span class='ex'>Das Eis ist lecker.</span></p><p><span class='ex'>nicht</span> (not) comes before the adjective: <span class='ex'>Der Tee ist nicht süß.</span></p><p><span class='ex'>schmeckt</span> = tastes: <span class='ex'>Das Brot schmeckt gut.</span></p>",
   words:[["lecker","delicious, tasty"],["gut","good"],["süß","sweet"],["salzig","salty"],["scharf","spicy"],["kalt","cold"],["warm","warm"],["das Brot","bread"],["der Apfel","apple"],["schmeckt","tastes"],["nicht","not"],["auch","also, too"]],
-  sents:[["Das Eis ist lecker.","The ice cream is delicious.",{en:["The ice cream is tasty."]}],["Die Pizza ist zu salzig.","The pizza is too salty."],["Der Kaffee ist kalt.","The coffee is cold."],["Das Brot schmeckt gut.","The bread tastes good."],["Der Tee ist nicht süß.","The tea is not sweet.",{en:["The tea isn't sweet."]}],["Der Salat ist auch gut.","The salad is also good.",{en:["The salad is good too."]}]]}
+  sents:[["Das Eis ist lecker.","The ice cream is delicious.",{en:["The ice cream is tasty."]}],["Die Pizza ist zu salzig.","The pizza is too salty."],["Der Kaffee ist kalt.","The coffee is cold."],["Das Brot schmeckt gut.","The bread tastes good."],["Der Tee ist nicht süß.","The tea is not sweet.",{en:["The tea isn't sweet."]}],["Der Salat ist auch gut.","The salad is also good.",{en:["The salad is good too."]}]]},
+ {title:"Talk about family", color:"#ce82ff",
+  tip:"<p><span class='ex'>haben</span> (to have): <span class='ex'>ich habe</span>, <span class='ex'>du hast</span>, <span class='ex'>er/sie hat</span>, <span class='ex'>wir haben</span>.</p><p>After <span class='ex'>haben</span>, <span class='ex'>ein</span> becomes <span class='ex'>einen</span> for der words: <span class='ex'>Ich habe einen Bruder.</span> Die and das words don't change: <span class='ex'>eine Schwester</span>, <span class='ex'>ein Kind</span>.</p><p><span class='ex'>mein</span> goes with der/das words, <span class='ex'>meine</span> with die words: <span class='ex'>mein Vater</span>, <span class='ex'>meine Mutter</span>.</p>",
+  words:[["die Familie","family"],["die Mutter","mother"],["der Vater","father"],["der Bruder","brother"],["die Schwester","sister"],["der Sohn","son"],["die Tochter","daughter"],["das Kind","child"],["die Kinder","children"],["habe","have (with ich)"],["hast","have (with du)"],["hat","has"],["einen","a (der words, after haben)"],["meine","my (die words)"],["nett","nice, kind"]],
+  sents:[["Ich habe einen Bruder.","I have a brother."],["Hast du Kinder?","Do you have children?"],["Sie hat eine Tochter.","She has a daughter."],["Mein Vater ist Lehrer.","My father is a teacher."],["Meine Mutter ist sehr nett.","My mother is very nice.",{en:["My mother is very kind."]}],["Das ist meine Familie.","This is my family.",{en:["That is my family."]}],["Wir haben zwei Kinder.","We have two children."]]},
+
+ {title:"Days of the week", color:"#1cb0f6",
+  tip:"<p>All days are <span class='ex'>der</span> words: <span class='ex'>der Montag</span>. \"On Monday\" is <span class='ex'>am Montag</span>.</p><p>The verb always stays in second place. If a time word comes first, the subject moves after the verb: <span class='ex'>Am Samstag spiele ich Fußball.</span></p>",
+  words:[["der Montag","Monday"],["der Dienstag","Tuesday"],["der Mittwoch","Wednesday"],["der Donnerstag","Thursday"],["der Freitag","Friday"],["der Samstag","Saturday"],["der Sonntag","Sunday"],["heute","today"],["morgen","tomorrow"],["die Woche","week"],["das Wochenende","weekend"],["am","on (with days)"]],
+  sents:[["Heute ist Montag.","Today is Monday."],["Morgen ist Freitag.","Tomorrow is Friday."],["Am Samstag spiele ich Fußball.","On Saturday I play soccer.",{de:["Ich spiele am Samstag Fußball."],en:["I play soccer on Saturday."]}],["Am Wochenende wandern wir.","On the weekend we hike.",{de:["Wir wandern am Wochenende."],en:["We hike on the weekend."]}],["Was machst du heute?","What are you doing today?"],["Am Freitag ist die Party.","On Friday is the party.",{de:["Die Party ist am Freitag."],en:["The party is on Friday."]}]]},
+
+ {title:"At home", color:"#ff9600",
+  tip:"<p>Describe things with <span class='ex'>ist</span> + adjective: <span class='ex'>Das Haus ist groß.</span></p><p><span class='ex'>aber</span> means but: <span class='ex'>alt, aber schön</span> = old but nice.</p>",
+  words:[["das Haus","house"],["die Wohnung","apartment"],["die Küche","kitchen"],["das Zimmer","room"],["das Bad","bathroom"],["der Tisch","table"],["das Bett","bed"],["der Stuhl","chair"],["groß","big"],["klein","small"],["schön","beautiful, nice"],["neu","new"],["alt","old"],["aber","but"]],
+  sents:[["Das Haus ist groß.","The house is big."],["Die Küche ist klein.","The kitchen is small."],["Mein Zimmer ist schön.","My room is nice.",{en:["My room is beautiful."]}],["Das Bett ist neu.","The bed is new."],["Wo ist das Bad?","Where is the bathroom?"],["Die Wohnung ist alt, aber schön.","The apartment is old but nice.",{en:["The apartment is old but beautiful."]}]]},
+
+ {title:"Clothes and colors", color:"#ff4b4b",
+  tip:"<p>After <span class='ex'>ist</span> or <span class='ex'>sind</span>, colors keep their plain form: <span class='ex'>Das Hemd ist blau.</span></p><p><span class='ex'>die Hose</span> (pants) is singular in German: <span class='ex'>Die Hose ist schwarz.</span></p><p><span class='ex'>trägt</span> = wears, is wearing.</p>",
+  words:[["rot","red"],["blau","blue"],["grün","green"],["gelb","yellow"],["schwarz","black"],["weiß","white"],["das Hemd","shirt"],["die Hose","pants"],["die Jacke","jacket"],["der Schuh","shoe"],["die Schuhe","shoes"],["das Kleid","dress"],["trägt","wears, is wearing"]],
+  sents:[["Das Hemd ist blau.","The shirt is blue."],["Die Hose ist schwarz.","The pants are black.",{en:["The trousers are black."]}],["Er trägt eine Jacke.","He is wearing a jacket.",{en:["He wears a jacket."]}],["Das Kleid ist rot.","The dress is red."],["Die Schuhe sind weiß.","The shoes are white."],["Ist die Jacke neu?","Is the jacket new?"]]},
+
+ {title:"Find your way", color:"#00cd9c",
+  tip:"<p>Use <span class='ex'>Sie</span> (capital S) to speak politely to strangers. Polite instructions put the verb first: <span class='ex'>Gehen Sie geradeaus.</span> = Go straight ahead.</p><p><span class='ex'>links</span> = left, <span class='ex'>rechts</span> = right.</p>",
+  words:[["der Bahnhof","train station"],["die Straße","street"],["die Bank","bank"],["der Supermarkt","supermarket"],["die Kirche","church"],["das Hotel","hotel"],["links","left"],["rechts","right"],["geradeaus","straight ahead"],["dort","there"],["weit","far"],["nah","near, close"]],
+  sents:[["Wo ist der Bahnhof?","Where is the train station?"],["Der Supermarkt ist links.","The supermarket is on the left."],["Das Hotel ist dort.","The hotel is there.",{en:["The hotel is over there."]}],["Gehen Sie geradeaus.","Go straight ahead.",{en:["Go straight."]}],["Die Bank ist nicht weit.","The bank is not far.",{en:["The bank isn't far."]}],["Ist die Kirche rechts?","Is the church on the right?"]]},
+
+ {title:"Talk about the weather", color:"#2b70c9",
+  tip:"<p>Weather uses <span class='ex'>es</span> (it): <span class='ex'>Es regnet.</span> = It's raining. <span class='ex'>Es schneit.</span> = It's snowing.</p><p><span class='ex'>im</span> = in the: <span class='ex'>im Winter</span>, <span class='ex'>im Sommer</span>.</p>",
+  words:[["das Wetter","weather"],["die Sonne","sun"],["der Regen","rain"],["der Schnee","snow"],["es regnet","it's raining"],["es schneit","it's snowing"],["heiß","hot"],["sonnig","sunny"],["windig","windy"],["der Sommer","summer"],["der Winter","winter"],["im","in the"]],
+  sents:[["Heute ist es kalt.","Today it is cold.",{de:["Es ist heute kalt."],en:["It is cold today."]}],["Es regnet.","It's raining.",{en:["It is raining."]}],["Im Winter schneit es.","In winter it snows.",{de:["Es schneit im Winter."],en:["It snows in winter."]}],["Das Wetter ist schön.","The weather is nice."],["Im Sommer ist es heiß.","In summer it is hot.",{de:["Es ist im Sommer heiß."],en:["It is hot in summer."]}],["Die Sonne ist warm.","The sun is warm."]]},
+
+ {title:"Daily routine", color:"#ffc800",
+  tip:"<p>Times use <span class='ex'>um</span> + number + <span class='ex'>Uhr</span>: <span class='ex'>um sieben Uhr</span> = at seven o'clock.</p><p><span class='ex'>ich arbeite</span>, <span class='ex'>wir arbeiten</span>. The verb stays second: <span class='ex'>Dann gehe ich nach Hause.</span></p>",
+  words:[["arbeiten","to work"],["schlafen","to sleep"],["essen","to eat"],["das Frühstück","breakfast"],["das Abendessen","dinner"],["die Arbeit","work, job"],["früh","early"],["spät","late"],["um","at (with times)"],["die Uhr","o'clock, clock"],["immer","always"],["dann","then"]],
+  sents:[["Ich arbeite heute.","I am working today.",{de:["Heute arbeite ich."],en:["I work today."]}],["Das Frühstück ist um sieben Uhr.","Breakfast is at seven o'clock.",{en:["Breakfast is at seven."]}],["Wir essen um sechs Uhr.","We eat at six o'clock.",{en:["We eat at six."]}],["Dann gehe ich nach Hause.","Then I go home.",{en:["Then I am going home."]}],["Das Abendessen ist lecker.","Dinner is delicious."],["Du bist zu spät.","You are late.",{en:["You're late.","You are too late."]}]]},
+
+ {title:"Likes and dislikes", color:"#58cc02",
+  tip:"<p>Verb + <span class='ex'>gern</span> = you like doing it: <span class='ex'>Ich koche gern.</span> = I like to cook. <span class='ex'>nicht gern</span> = don't like to.</p><p>For things, use <span class='ex'>mögen</span>: <span class='ex'>ich mag</span>, <span class='ex'>du magst</span>.</p><p><span class='ex'>lieber</span> = rather, prefer.</p>",
+  words:[["gern","gladly (like doing)"],["mag","like (with ich)"],["magst","like (with du)"],["lieber","rather, prefer"],["das Lieblingsessen","favorite food"],["der Film","movie"],["das Buch","book"],["lesen","to read"],["kochen","to cook"],["tanzen","to dance"],["die Schokolade","chocolate"]],
+  sents:[["Ich koche gern.","I like to cook.",{en:["I like cooking."]}],["Ich mag Schokolade.","I like chocolate."],["Magst du Fußball?","Do you like soccer?"],["Wir tanzen nicht gern.","We don't like to dance.",{en:["We don't like dancing.","We do not like to dance."]}],["Ich lese lieber.","I prefer to read.",{en:["I prefer reading.","I'd rather read."]}],["Pizza ist mein Lieblingsessen.","Pizza is my favorite food."]]},
+
+ {title:"Ask questions", color:"#ce82ff",
+  tip:"<p>Question words go first, then the verb: <span class='ex'>Woher kommst du?</span></p><p>Yes/no questions start with the verb: <span class='ex'>Sprichst du Englisch?</span></p><p><span class='ex'>sprechen</span> changes: <span class='ex'>ich spreche</span>, <span class='ex'>du sprichst</span>.</p>",
+  words:[["wie","how"],["wann","when"],["warum","why"],["woher","where from"],["kommen","to come"],["komme","come (with ich)"],["kommst","come (with du)"],["lernen","to learn"],["sprechen","to speak"],["Deutsch","German"],["Englisch","English"],["Amerika","America"]],
+  sents:[["Woher kommst du?","Where are you from?",{en:["Where do you come from?"]}],["Ich komme aus Amerika.","I am from America.",{en:["I come from America.","I'm from America."]}],["Wie geht's?","How are you?",{en:["How's it going?"]}],["Wann kommst du?","When are you coming?"],["Warum lernst du Deutsch?","Why are you learning German?"],["Sprichst du Englisch?","Do you speak English?"],["Wie heißt du?","What's your name?",{en:["What is your name?"]}]]},
+
+ {title:"Pay the bill", color:"#ff9600",
+  tip:"<p>13 to 19 are number + <span class='ex'>zehn</span>: <span class='ex'>dreizehn</span> (13). Then <span class='ex'>zwanzig</span> (20), <span class='ex'>dreißig</span> (30, spelled with ß), <span class='ex'>hundert</span> (100).</p><p>In restaurants the server often asks <span class='ex'>Zusammen oder getrennt?</span> = Together or separately?</p>",
+  words:[["elf","eleven"],["zwölf","twelve"],["dreizehn","thirteen"],["zwanzig","twenty"],["dreißig","thirty"],["hundert","hundred"],["teuer","expensive"],["billig","cheap"],["bezahlen","to pay"],["die Rechnung","bill, check"],["zusammen","together"],["getrennt","separately"]],
+  sents:[["Das ist zu teuer.","That is too expensive.",{en:["That's too expensive.","This is too expensive."]}],["Die Rechnung, bitte.","The check, please.",{en:["The bill, please."]}],["Zusammen oder getrennt?","Together or separately?"],["Das kostet zwanzig Euro.","That costs twenty euros.",{en:["It costs twenty euros."]}],["Die Brezel ist billig.","The pretzel is cheap."],["Ich bezahle.","I'm paying.",{en:["I am paying.","I pay."]}]]}
+
 ];
 const LESSONS_PER_UNIT = 4; // lesson 4 = unit review
 const KNOWN_UNITS = 8;      // matches Duolingo progress: units 1-8 done, start at unit 9
@@ -242,6 +320,7 @@ function freshState(){
 }
 let S;
 try { S = Object.assign(freshState(), JSON.parse(localStorage.getItem(KEY)||"null")||{}); } catch(e){ S = freshState(); }
+if(!S.uid) S.uid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2);
 if(!S.remind || typeof S.remind!=="object") S.remind = {on:false, time:"19:00", id:null};
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -311,7 +390,7 @@ function renderLearn(){
     }
     html += `</div></div>`;
   });
-  html += `<div class="pad" style="text-align:center;color:var(--muted)">More units coming. Keep going! 💪</div>`;
+  html += `<div class="pad" style="text-align:center;color:var(--muted)">Section 1 complete when you reach the end. More coming! 💪</div>`;
   $("#tab-learn").innerHTML = html;
 }
 $("#tab-learn").addEventListener("click", e=>{
@@ -339,10 +418,13 @@ function renderPractice(){
   $("#tab-practice").innerHTML = `<h2>Practice</h2>
     <div class="card"><b style="font-size:19px">🧠 Mistakes review</b><p style="color:var(--muted)">${weak?`${weak} word${weak>1?"s":""} you've missed. Clear them by getting them right.`:"No missed words right now. Nice work!"}</p>
       <button class="btn red" id="pMist" ${weak?"":"disabled"}>Review mistakes</button></div>
+    <div class="card"><b style="font-size:19px">💬 Chat with Lena</b><p style="color:var(--muted)">Real conversation practice with your AI tutor. 5 messages counts as a lesson.</p>
+      <button class="btn" style="background:#ce82ff;box-shadow:0 5px 0 #a560d8" id="pTutor">Start chatting</button></div>
     <div class="card"><b style="font-size:19px">🔀 Mixed practice</b><p style="color:var(--muted)">A random mix from every unit you've unlocked.</p>
       <button class="btn blue" id="pMix">Start +10 XP</button></div>
     ${canSpeak?`<div class="card"><b style="font-size:19px">🎧 Listening only</b><p style="color:var(--muted)">Hear German, pick or build what was said.</p><button class="btn" id="pListen">Start +10 XP</button></div>`:""}`;
   $("#pMix").onclick = ()=>startLesson({mode:"mix"});
+  $("#pTutor").onclick = ()=>document.querySelector('.nav button[data-tab="tutor"]').click();
   const pm=$("#pMist"); if(pm) pm.onclick = ()=>startLesson({mode:"mistakes"});
   const pl=$("#pListen"); if(pl) pl.onclick = ()=>startLesson({mode:"listen"});
 }
@@ -460,8 +542,9 @@ function confirmReset(){ if(resetArmed){ resetArmed=false; return true; } resetA
 document.querySelector(".nav").addEventListener("click", e=>{
   const b=e.target.closest("button"); if(!b) return;
   document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("on",x===b));
-  ["learn","practice","words","me"].forEach(t=>$("#tab-"+t).classList.toggle("hidden", t!==b.dataset.tab));
+  ["learn","practice","tutor","words","me"].forEach(t=>$("#tab-"+t).classList.toggle("hidden", t!==b.dataset.tab));
   refresh(); window.scrollTo(0,0);
+  if(b.dataset.tab==="tutor") openTutor();
 });
 function refresh(){ renderHeader(); renderLearn(); renderPractice(); renderWords(); renderMe(); }
 
@@ -679,22 +762,24 @@ function grade(ok, answerText, words, isMatch){
   setCheck("Continue", true, nextExercise);
 }
 
+function creditPractice(gain){
+  const goalBefore = dayXp() >= S.goal;
+  const t=today(); let streakUp=false;
+  if(S.lastDay!==t){ S.streak = (S.lastDay===yesterday()) ? S.streak+1 : 1; S.lastDay=t; streakUp=true; }
+  if(S.xpDay!==t){ S.xpDay=t; S.dayXp=0; }
+  S.xp += gain; S.dayXp += gain; S.lessons++;
+  save(); syncStreak();
+  return {streakUp, goalHit: !goalBefore && dayXp()>=S.goal};
+}
 function finishLesson(){
   L.finished = true;
   const counted = L.total || 1;
   const acc = Math.round(100*L.firstTry/counted);
   const perfect = L.missed.size===0;
   const gain = 10 + (perfect?5:0);
-  const goalBefore = dayXp() >= S.goal;
-  // streak
-  const t=today();
-  if(S.lastDay!==t){ S.streak = (S.lastDay===yesterday()) ? S.streak+1 : 1; S.lastDay=t; var streakUp=true; }
-  if(S.xpDay!==t){ S.xpDay=t; S.dayXp=0; }
-  S.xp += gain; S.dayXp += gain; S.lessons++;
   const o=L.opts;
   if(!o.mode && (S.done[o.unit]||0)===o.lesson) S.done[o.unit]=o.lesson+1;
-  save(); syncStreak();
-  const goalHit = !goalBefore && dayXp()>=S.goal;
+  const {streakUp, goalHit} = creditPractice(gain);
   const unitDone = !o.mode && o.lesson===LESSONS_PER_UNIT-1;
   $("#progBar").style.width="100%";
   $("#lbody").innerHTML = `<div class="endwrap">
@@ -711,6 +796,83 @@ function finishLesson(){
   setFoot("", "");
   chime(true); setTimeout(()=>chime(true),220);
   setCheck("Continue", true, closeLesson);
+}
+
+/* ============ AI TUTOR (Ollama on kingdom-ai) ============ */
+const SCENES = [["free","💬 Free chat"],["cafe","☕ Café"],["imbiss","🥨 Snack bar"],["meet","👋 Meet someone"],["hobbies","⚽ Hobbies"],["family","👨‍👩‍👧 Family"],["weather","🌦️ Weather"],["directions","🗺️ Directions"]];
+const CHAT_KEY = "meinDeutsch.chat";
+const CHAT_GOAL = 5;
+let T; try{ T = JSON.parse(localStorage.getItem(CHAT_KEY)||"null"); }catch(e){}
+if(!T || !Array.isArray(T.msgs)) T = {scene:"free", msgs:[], count:0, credited:false};
+let tutorBusy=false, recog=null;
+function saveChat(){ try{ T.msgs=T.msgs.slice(-60); localStorage.setItem(CHAT_KEY, JSON.stringify(T)); }catch(e){} }
+function knownWords(){ return unlockedWords().map(x=>x.w[0]); }
+function openTutor(){
+  renderTutor();
+  if(!T.msgs.length && !tutorBusy) tutorSend("");
+}
+function renderTutor(){
+  const el=$("#tab-tutor");
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const left = Math.max(0, CHAT_GOAL - T.count);
+  el.innerHTML = `<div class="chathead"><div class="avatar">👩‍🏫</div><div class="chatgoal"><b>Lena</b> <small>· your German tutor</small><br>
+      <small>${T.credited?"✅ Chat lesson done. Keep talking or start a new chat!":`${left} more message${left===1?"":"s"} to finish a chat lesson (+10 XP)`}</small></div>
+      <button class="chip" id="newChat">New chat</button></div>
+    <div class="chips">${SCENES.map(([k,n])=>`<button class="chip ${T.scene===k?"on":""}" data-scene="${k}">${n}</button>`).join("")}</div>
+    <div class="chat" id="chat">${T.msgs.map(msgHtml).join("")}${tutorBusy?'<div class="typing">Lena is typing <i>●</i><i>●</i><i>●</i></div>':""}</div>
+    <div class="chatbar"><div class="in">
+      ${SR?'<button class="icbtn mic" id="micBtn" aria-label="Speak German">🎤</button>':""}
+      <input id="chatIn" placeholder="Schreib auf Deutsch..." autocomplete="off" enterkeyhint="send">
+      <button class="icbtn" id="sendBtn" aria-label="Send" ${tutorBusy?"disabled":""}>➤</button></div></div>`;
+  const nav=document.querySelector(".nav"); el.querySelector(".chatbar").style.bottom = nav.offsetHeight+"px";
+  el.querySelectorAll("[data-scene]").forEach(b=>b.onclick=()=>{ if(tutorBusy) return; T={scene:b.dataset.scene,msgs:[],count:0,credited:false}; saveChat(); openTutor(); });
+  $("#newChat").onclick=()=>{ if(tutorBusy) return; T={scene:T.scene,msgs:[],count:0,credited:false}; saveChat(); openTutor(); };
+  const inp=$("#chatIn");
+  const send=()=>{ const v=inp.value.trim(); if(!v||tutorBusy) return; inp.value=""; tutorSend(v); };
+  $("#sendBtn").onclick=send; inp.onkeydown=e=>{ if(e.key==="Enter") send(); };
+  const mic=$("#micBtn");
+  if(mic) mic.onclick=()=>{
+    if(recog){ recog.stop(); return; }
+    try{ recog=new SR(); recog.lang="de-DE"; recog.interimResults=false; recog.maxAlternatives=1;
+      recog.onresult=e=>{ inp.value=e.results[0][0].transcript; inp.focus(); };
+      recog.onerror=e=>{ if(e.error==="not-allowed") toast("Allow the microphone to speak to Lena"); };
+      recog.onend=()=>{ recog=null; mic.classList.remove("live"); };
+      mic.classList.add("live"); recog.start(); toast("Sprich jetzt... (speak now)");
+    }catch(err){ recog=null; toast("Voice input isn't available here"); }
+  };
+  el.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>speak(b.dataset.say));
+  el.querySelectorAll("[data-en]").forEach(b=>b.onclick=()=>{ const en=b.closest(".msg").querySelector(".en"); en.classList.toggle("hidden"); b.textContent=en.classList.contains("hidden")?"Show English":"Hide English"; });
+  el.querySelectorAll("[data-retry]").forEach(b=>b.onclick=()=>{ const last=T.msgs.pop(); saveChat(); const u=[...T.msgs].reverse().find(m=>m.role==="user"); if(u && T.msgs[T.msgs.length-1]===u){ T.msgs.pop(); T.count=Math.max(0,T.count-1); tutorSend(u.text); } else tutorSend(""); });
+  window.scrollTo(0, document.body.scrollHeight);
+}
+function msgHtml(m){
+  if(m.role==="user") return `<div class="msg me">${esc(m.text)}</div>${m.fix?`<div class="fix"><b>✏️ Better:</b> ${esc(m.fix)}${m.tip?`<br><span style="color:var(--muted)">${esc(m.tip)}</span>`:""}</div>`:""}`;
+  if(m.role==="sys") return `<div class="msg sys">${esc(m.text)} <button class="chip" data-retry style="margin-left:6px">Try again</button></div>`;
+  return `<div class="msg ai">${esc(m.de)}<div class="en hidden">${esc(m.en||"")}</div>
+    <div class="acts">${canSpeak?`<button data-say="${esc(m.de)}">🔊 Listen</button>`:""}${m.en?`<button data-en>Show English</button>`:""}</div></div>`;
+}
+async function tutorSend(text){
+  if(tutorBusy) return;
+  let userMsg=null;
+  if(text){ userMsg={role:"user", text}; T.msgs.push(userMsg); }
+  tutorBusy=true; saveChat(); renderTutor();
+  const history = T.msgs.filter(m=>m!==userMsg && m.role!=="sys").slice(-12).map(m=> m.role==="user" ? {role:"user",content:m.text} : {role:"assistant",content:m.de});
+  try{
+    const r = await fetch(PUSH+"/tutor", {method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({id:S.uid, scene:T.scene, scenario:T.scene, known:knownWords(), history, message:text})});
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok || !d.german) throw new Error(d.error || "Lena couldn't answer");
+    if(userMsg && d.correction && norm(d.correction)!==norm(text)){ userMsg.fix=d.correction; userMsg.tip=d.tip||""; }
+    T.msgs.push({role:"ai", de:d.german, en:d.english||""});
+    if(S.listen) speak(d.german);
+    if(userMsg){ T.count++;
+      if(!T.credited && T.count>=CHAT_GOAL){ T.credited=true; const {streakUp}=creditPractice(10); chime(true);
+        toast(streakUp ? `Chat lesson done! +10 XP · 🔥 ${S.streak} day streak` : "Chat lesson done! +10 XP"); renderHeader(); } }
+  }catch(err){
+    T.msgs.push({role:"sys", text: (err && err.message && !/fetch/i.test(err.message)) ? err.message : "Can't reach Lena right now. Is kingdom-ai on?"});
+  }
+  tutorBusy=false; saveChat();
+  if(!$("#tab-tutor").classList.contains("hidden")) renderTutor();
 }
 
 /* ============ BOOT ============ */

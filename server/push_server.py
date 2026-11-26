@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mein Deutsch daily reminder server (runs on kingdom-ai).
+"""Mein Deutsch server (runs on kingdom-ai): daily reminders + German tutor chat.
 
 Sends one push notification a day at the time you pick in the app, plus a
 9 PM "save your streak" nudge, and skips both on days you already did a lesson.
@@ -12,6 +12,8 @@ import os
 import re
 import threading
 import time
+import urllib.request
+from collections import defaultdict, deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from zoneinfo import ZoneInfo
 
@@ -28,6 +30,67 @@ ALLOWED_ORIGINS = {"https://michaelpeccia.github.io", "https://german.kingdom-li
 LATE_TIME = "21:00"          # second nudge if no lesson yet
 WINDOW_MIN = 60              # a reminder may go out up to this many minutes after its time
 DEFAULT_TZ = "America/Chicago"
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/chat")
+TUTOR_MODEL = os.environ.get("TUTOR_MODEL", "llama3.1:8b")
+TUTOR_LIMIT = 40             # tutor messages per learner per 10 minutes
+tutor_slots = threading.BoundedSemaphore(2)
+tutor_hits = defaultdict(deque)
+
+SCENARIOS = {
+    "free": "Have a friendly everyday chat. Ask about his day, food, hobbies or family.",
+    "cafe": "Role-play: you are a waiter at a cafe in Berlin and he is the customer ordering drinks and food.",
+    "imbiss": "Role-play: you work at an Imbiss (snack bar). He asks about food and prices in euros.",
+    "meet": "Role-play: you are meeting him for the first time at a party. Introduce yourselves.",
+    "hobbies": "Talk about sports and hobbies: what he likes to do and how often.",
+    "family": "Talk about family: brothers, sisters, children, parents.",
+    "weather": "Talk about the weather and the seasons today.",
+    "directions": "Role-play: he is a tourist asking you the way to places in town (Bahnhof, Supermarkt, Kirche).",
+}
+
+TUTOR_PROMPT = """You are Lena, a warm, patient German tutor chatting with an adult English speaker who is a beginner (level A1).
+Scenario: {scenario}
+
+How to reply:
+- Write your reply in very simple German: one or two short sentences, present tense.
+- Mostly use words he already knows: {known}
+  A few other very common words are fine.
+- End with one simple question so the conversation keeps going.
+- Never use English inside the "german" field.
+- Look closely at his last message. If it has a German mistake (spelling, word order, verb ending, article, missing capital on a noun), put the corrected sentence in "correction" and a one-sentence English explanation in "tip". If it was correct or he is only greeting you, leave both empty. Do not invent mistakes.
+- If he writes in English, put the German for what he meant in "correction", set "tip" to "Here's how to say that in German.", and answer him in German.
+- Keep everything kind, clean and encouraging.
+
+Answer ONLY with JSON in exactly this shape:
+{{"correction": "", "tip": "", "german": "", "english": ""}}
+where "english" is the English translation of your "german" reply."""
+
+
+def clean(s, n):
+    return str(s or "").replace("\x00", "").strip()[:n]
+
+
+def tutor_reply(b: dict) -> dict:
+    scen = SCENARIOS.get(str(b.get("scenario")), SCENARIOS["free"])
+    known = ", ".join(clean(w, 30) for w in (b.get("known") or [])[:350])
+    msgs = [{"role": "system", "content": TUTOR_PROMPT.format(scenario=scen, known=known or "basic greetings")}]
+    for m in (b.get("history") or [])[-12:]:
+        role = "assistant" if m.get("role") == "assistant" else "user"
+        msgs.append({"role": role, "content": clean(m.get("content"), 400)})
+    text = clean(b.get("message"), 400)
+    msgs.append({"role": "user", "content": text or "(Start the conversation: greet him and ask a first simple question that fits the scenario.)"})
+    req = urllib.request.Request(OLLAMA_URL, method="POST", headers={"Content-Type": "application/json"},
+                                 data=json.dumps({"model": TUTOR_MODEL, "messages": msgs, "stream": False,
+                                                  "format": "json", "keep_alive": "30m",
+                                                  "options": {"temperature": 0.6, "num_predict": 300}}).encode())
+    with urllib.request.urlopen(req, timeout=120) as r:
+        content = json.loads(r.read())["message"]["content"]
+    try:
+        out = json.loads(content)
+    except json.JSONDecodeError:
+        out = {"german": content}
+    return {k: clean(out.get(k), 600) for k in ("correction", "tip", "german", "english")}
+
+
 TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 lock = threading.Lock()
@@ -179,7 +242,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/vapid":
             return self.reply(200, {"key": PUBLIC_KEY})
         if self.path == "/health":
-            return self.reply(200, {"ok": True, "subscribers": len(DB)})
+            return self.reply(200, {"ok": True, "subscribers": len(DB), "tutor_model": TUTOR_MODEL})
         self.reply(404, {"error": "not found"})
 
     def body(self):
@@ -211,6 +274,24 @@ class Handler(BaseHTTPRequestHandler):
                            "sentDay": old.get("sentDay"), "lateDay": old.get("lateDay")}
                 save_db(DB)
             return self.reply(200, {"ok": True})
+
+        if self.path == "/tutor":
+            now = time.time()
+            hits = tutor_hits[rid]
+            while hits and now - hits[0] > 600:
+                hits.popleft()
+            if len(hits) >= TUTOR_LIMIT:
+                return self.reply(429, {"error": "Slow down a little. Try again in a few minutes."})
+            hits.append(now)
+            if not tutor_slots.acquire(timeout=90):
+                return self.reply(503, {"error": "Tutor is busy"})
+            try:
+                return self.reply(200, tutor_reply(b))
+            except Exception as e:
+                print("tutor error:", e, flush=True)
+                return self.reply(502, {"error": "Tutor is not available right now"})
+            finally:
+                tutor_slots.release()
 
         with lock:
             rec = DB.get(rid)

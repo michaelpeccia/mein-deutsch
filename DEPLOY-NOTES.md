@@ -5,7 +5,7 @@ Keep this note. These are the exact steps.
 ## Files
 - index.html (the whole app)
 - manifest.webmanifest, sw.js, icon-192.png, icon-512.png (install, offline, notifications)
-- server/push_server.py (daily reminder server, runs on kingdom-ai)
+- server/push_server.py (reminders + Lena the tutor, runs on kingdom-ai)
 - server/setup.sh (one-command installer for that server)
 
 Live app: https://michaelpeccia.github.io/mein-deutsch/
@@ -52,7 +52,7 @@ sudo systemctl restart mein-deutsch-push     # restart it
 curl -s http://localhost:8097/health         # quick check
 ```
 
-To update the server later (after pushing a new push_server.py to GitHub), just run the same curl setup line again.
+To update the server later (after pushing a new push_server.py to GitHub), just run the same curl setup line again. Your reminder key and subscriptions are kept.
 
 ---
 
@@ -77,6 +77,40 @@ How it works:
 - If you still haven't done a lesson by 9:00 PM, one more "save your streak" nudge.
 - Both are skipped on days you've already done a lesson.
 - Doing a lesson tells the server automatically.
+
+If Send test shows no notification:
+1. Fully close the app (swipe it away), open it, wait 5 seconds, close and reopen. That loads the newest version.
+2. Me > Daily reminder > Turn off, then Turn on, then Send test.
+3. Check Settings > Apps > Mein Deutsch > Notifications are on, and pull down the notification shade (silent mode hides the pop-up).
+
+## Lena, the tutor chat
+- Tutor tab in the app. Pick a scene (Café, Snack bar, Meet someone, and more) or Free chat.
+- She answers in simple German using your words, with Listen and Show English buttons.
+- If your message has a mistake, a yellow "Better:" box shows the fix.
+- 🎤 lets you speak German instead of typing.
+- 5 messages in a chat counts as a lesson: +10 XP and it keeps your streak.
+- She runs on kingdom-ai through Ollama (llama3.1:8b), at the same push.kingdom-life-ministry.com address. No extra Cloudflare step.
+
+To try a different model (for example qwen3:8b), on kingdom-ai:
+```
+sudo systemctl edit mein-deutsch-push
+```
+Add these two lines in the blank area, save, then restart:
+```
+[Service]
+Environment=TUTOR_MODEL=qwen3:8b
+```
+```
+sudo systemctl restart mein-deutsch-push
+curl -s http://localhost:8097/health
+```
+The health line shows which model is in use.
+
+If Lena says she can't answer:
+```
+journalctl -u mein-deutsch-push -n 20 --no-pager
+ollama list
+```
 
 ## Your streak
 Me > Carry over your streak lets you type your Duolingo streak and whether you last practiced today or yesterday. The next lesson adds a day to it.
