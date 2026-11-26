@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#131f24">
+<title>Mein Deutsch</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#131f24; --card:#1d2b33; --line:#37464f; --text:#f1f7fb; --muted:#8fa3ad;
+  --green:#58cc02; --green-d:#46a302; --red:#ff4b4b; --red-d:#d33131;
+  --gold:#ffc800; --gold-d:#e5a400; --blue:#1cb0f6; --blue-d:#1899d6; --orange:#ff9600;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font-family:"Nunito","Segoe UI",Roboto,system-ui,sans-serif;}
+button{font-family:inherit;color:inherit}
+.hidden{display:none!important}
+#app{max-width:560px;margin:0 auto;min-height:100%;position:relative}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;justify-content:space-between;
+  align-items:center;padding:14px 18px 10px;border-bottom:2px solid var(--line)}
+.stat{display:flex;align-items:center;gap:6px;font-weight:800;font-size:18px}
+.stat .ic{font-size:22px}
+.flag{width:28px;height:20px;border-radius:4px;overflow:hidden;display:inline-flex;flex-direction:column}
+.flag i{flex:1}
+.streak{color:var(--orange)} .streak.off{color:var(--muted);filter:grayscale(1)}
+.xp{color:var(--gold)}
+.goalring{width:30px;height:30px}
+
+/* path */
+.screen{padding-bottom:96px}
+.unit{margin:18px 16px 8px;scroll-margin-top:72px}
+.banner{border-radius:16px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;
+  box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.banner small{display:block;font-weight:800;opacity:.8;font-size:13px;letter-spacing:.5px;text-transform:uppercase}
+.banner b{font-size:21px}
+.banner button{background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.35);border-radius:12px;
+  padding:8px 10px;font-size:18px;cursor:pointer}
+.nodes{display:flex;flex-direction:column;align-items:center;padding:22px 0 8px;gap:18px}
+.node{width:76px;height:70px;border-radius:50%;border:none;font-size:30px;cursor:pointer;position:relative;
+  box-shadow:0 7px 0 var(--sh);background:var(--bg-n);transition:transform .08s}
+.node:active{transform:translateY(5px);box-shadow:0 2px 0 var(--sh)}
+.node.locked{--bg-n:#37464f;--sh:#2a363d;color:#52656d}
+.node.done{--bg-n:var(--gold);--sh:var(--gold-d)}
+.node.current{animation:pulse 1.6s infinite}
+.node .start{position:absolute;top:-40px;left:50%;transform:translateX(-50%);background:var(--card);
+  border:2px solid var(--line);color:var(--green);font-size:14px;font-weight:900;padding:6px 12px;border-radius:10px;white-space:nowrap}
+@keyframes pulse{0%,100%{outline:6px solid rgba(255,255,255,0)}50%{outline:6px solid rgba(255,255,255,.18)}}
+
+/* bottom nav */
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--bg);border-top:2px solid var(--line);
+  display:flex;justify-content:center;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
+.nav div{display:flex;max-width:560px;width:100%;justify-content:space-around}
+.nav button{background:none;border:2px solid transparent;border-radius:14px;padding:6px 14px;font-size:26px;cursor:pointer}
+.nav button.on{border-color:var(--blue);background:rgba(28,176,246,.12)}
+.nav span{display:block;font-size:11px;font-weight:800;color:var(--muted)}
+
+/* generic */
+.pad{padding:18px}
+h2{margin:6px 0 14px;font-size:24px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.btn{display:block;width:100%;border:none;border-radius:16px;padding:15px;font-size:17px;font-weight:900;
+  letter-spacing:.6px;text-transform:uppercase;cursor:pointer;background:var(--green);box-shadow:0 5px 0 var(--green-d);color:#fff}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--green-d)}
+.btn.blue{background:var(--blue);box-shadow:0 5px 0 var(--blue-d)}
+.btn.red{background:var(--red);box-shadow:0 5px 0 var(--red-d)}
+.btn.ghost{background:transparent;border:2px solid var(--line);box-shadow:0 4px 0 var(--line);color:var(--muted)}
+.btn:disabled{background:#37464f;box-shadow:0 5px 0 #2a363d;color:#6b7f88;cursor:default}
+.row{display:flex;gap:10px;align-items:center}
+.wordrow{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.wordrow:last-child{border-bottom:none}
+.wordrow b{font-size:17px} .wordrow small{display:block;color:var(--muted)}
+.spk{background:none;border:none;font-size:22px;cursor:pointer;color:var(--blue);padding:0}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--red);margin-left:auto;flex:none}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;min-width:60px;padding:10px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-weight:800;cursor:pointer}
+.seg button.on{border-color:var(--blue);color:var(--blue)}
+.levelbar{height:14px;background:#37464f;border-radius:8px;overflow:hidden;margin-top:8px}
+.levelbar i{display:block;height:100%;background:var(--gold);border-radius:8px}
+
+/* lesson */
+#lesson{position:fixed;inset:0;background:var(--bg);z-index:20;display:flex;flex-direction:column;max-width:560px;margin:0 auto}
+.lhead{display:flex;align-items:center;gap:14px;padding:16px 18px}
+.lhead button{background:none;border:none;font-size:26px;color:var(--muted);cursor:pointer}
+.prog{flex:1;height:16px;background:#37464f;border-radius:10px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--green);border-radius:10px;transition:width .3s}
+.lbody{flex:1;overflow-y:auto;padding:6px 18px 18px}
+.qtitle{font-size:22px;font-weight:900;margin:8px 0 18px}
+.prompt{display:flex;align-items:center;gap:12px;margin-bottom:20px;font-size:20px}
+.bubble{border:2px solid var(--line);border-radius:14px;padding:12px 14px;font-size:19px;line-height:1.35}
+.bigspk{width:110px;height:84px;border-radius:18px;border:none;background:var(--blue);box-shadow:0 5px 0 var(--blue-d);font-size:40px;cursor:pointer}
+.smallspk{width:60px;height:56px;border-radius:14px;border:none;background:var(--blue);box-shadow:0 4px 0 var(--blue-d);font-size:24px;cursor:pointer}
+.choices{display:flex;flex-direction:column;gap:12px}
+.choice{text-align:left;border:2px solid var(--line);border-bottom-width:5px;background:transparent;border-radius:14px;
+  padding:15px;font-size:18px;cursor:pointer}
+.choice.sel{border-color:var(--blue);background:rgba(28,176,246,.12);color:#9fe0ff}
+.choice.right{border-color:var(--green);background:rgba(88,204,2,.14);color:#a6ef6b}
+.choice.wrong{border-color:var(--red);background:rgba(255,75,75,.14);color:#ff9d9d}
+.choice.gone{opacity:.25;pointer-events:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.answerline{min-height:118px;border-top:2px solid var(--line);border-bottom:2px solid var(--line);padding:12px 0;
+  display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;margin-bottom:22px;
+  background:repeating-linear-gradient(transparent,transparent 52px,var(--line) 52px,var(--line) 54px)}
+.bank{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.tok{border:2px solid var(--line);border-bottom-width:4px;background:var(--bg);border-radius:12px;padding:9px 13px;font-size:18px;cursor:pointer;height:46px}
+.tok.used{background:#37464f;color:transparent;border-color:#37464f;pointer-events:none}
+.newcard{text-align:center;padding:20px 0}
+.newcard .de{font-size:38px;font-weight:900;margin:18px 0 6px}
+.newcard .en{font-size:20px;color:var(--muted)}
+.tag{display:inline-block;background:rgba(206,130,255,.18);color:#ce82ff;font-weight:900;font-size:13px;padding:5px 10px;border-radius:8px;letter-spacing:.6px}
+.lfoot{padding:16px 18px calc(18px + env(safe-area-inset-bottom));border-top:2px solid var(--line)}
+.lfoot.ok{background:#1f3a16;border-color:transparent}
+.lfoot.bad{background:#3d1c1c;border-color:transparent}
+.fb{margin-bottom:14px;display:none}
+.lfoot.ok .fb,.lfoot.bad .fb{display:block}
+.fb b{font-size:21px} .lfoot.ok .fb b{color:var(--green)} .lfoot.bad .fb b{color:var(--red)}
+.fb div{margin-top:4px;font-size:17px}
+.lfoot.ok .btn{background:var(--green)} .lfoot.bad .btn{background:var(--red);box-shadow:0 5px 0 var(--red-d)}
+
+/* end screen */
+.endwrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+.endwrap h1{color:var(--gold);font-size:32px;margin:10px 0 24px}
+.tiles{display:flex;gap:12px;width:100%;justify-content:center}
+.tile{flex:1;max-width:150px;border-radius:16px;border:2px solid var(--c);overflow:hidden}
+.tile small{display:block;background:var(--c);color:#13202a;font-weight:900;font-size:12px;padding:5px;letter-spacing:.6px}
+.tile b{display:block;padding:14px 4px;font-size:24px;color:var(--c)}
+.bigemoji{font-size:84px;animation:pop .6s ease}
+@keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* modal + toast */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:85vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 18px 30px;border-top:2px solid var(--line)}
+.sheet p{line-height:1.5;color:#d6e3ea}
+.sheet .ex{color:var(--blue);font-weight:800}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--card);border:2px solid var(--line);
+  padding:12px 18px;border-radius:14px;font-weight:800;z-index:40;max-width:90%;text-align:center}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="stat"><span class="flag"><i style="background:#000"></i><i style="background:#dd0000"></i><i style="background:#ffce00"></i></span><span id="lvl">1</span></div>
+    <div class="stat streak" id="streakBox"><span class="ic">🔥</span><span id="streak">0</span></div>
+    <div class="stat xp"><span class="ic">⚡</span><span id="xp">0</span></div>
+    <div class="stat"><svg class="goalring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="#37464f" stroke-width="5"/><circle id="goalArc" cx="18" cy="18" r="15" fill="none" stroke="#ffc800" stroke-width="5" stroke-linecap="round" stroke-dasharray="94.2" stroke-dashoffset="94.2" transform="rotate(-90 18 18)"/></svg></div>
+  </div>
+
+  <div id="tab-learn" class="screen"></div>
+  <div id="tab-practice" class="screen pad hidden"></div>
+  <div id="tab-words" class="screen pad hidden"></div>
+  <div id="tab-me" class="screen pad hidden"></div>
+
+  <nav class="nav"><div>
+    <button data-tab="learn" class="on">🏠<span>Learn</span></button>
+    <button data-tab="practice">🏋️<span>Practice</span></button>
+    <button data-tab="words">📖<span>Words</span></button>
+    <button data-tab="me">⚙️<span>Me</span></button>
+  </div></nav>
+</div>
+
+<div id="lesson" class="hidden">
+  <div class="lhead"><button id="quitBtn" aria-label="Quit">✕</button><div class="prog"><i id="progBar" style="width:0"></i></div></div>
+  <div class="lbody" id="lbody"></div>
+  <div class="lfoot" id="lfoot">
+    <div class="fb" id="fb"></div>
+    <button class="btn" id="checkBtn" disabled>Check</button>
+  </div>
+</div>
+
+<script>
+/* ============ COURSE CONTENT ============
+   Each unit: words [German, English], sentences [German, English, {de:[alt German], en:[alt English]}]
+   Nouns carry their article (der/die/das) so gender is learned with the word. */
+const UNITS = [
+ {title:"Greet people", color:"#58cc02",
+  tip:"<p><span class='ex'>Hallo</span> works any time. For a polite greeting use the time of day: <span class='ex'>Guten Morgen</span> (morning), <span class='ex'>Guten Tag</span> (daytime), <span class='ex'>Guten Abend</span> (evening).</p><p><span class='ex'>Bitte</span> means please, and it is also how you say you're welcome after <span class='ex'>danke</span>.</p>",
+  words:[["Hallo","hello"],["Guten Morgen","good morning"],["Guten Tag","good day, hello"],["Guten Abend","good evening"],["Tschüss","bye"],["danke","thanks, thank you"],["bitte","please"],["ja","yes"],["nein","no"],["Entschuldigung","excuse me, sorry"]],
+  sents:[["Guten Morgen!","Good morning!"],["Ja, bitte.","Yes, please."],["Nein, danke.","No, thanks.",{en:["No, thank you."]}],["Danke, tschüss!","Thanks, bye!"],["Hallo, guten Abend!","Hello, good evening!"]]},
+
+ {title:"Introduce yourself", color:"#ce82ff",
+  tip:"<p><span class='ex'>sein</span> (to be) changes with the person: <span class='ex'>ich bin</span> (I am), <span class='ex'>du bist</span> (you are).</p><p><span class='ex'>Ich heiße Michael</span> means \"My name is Michael\" (literally \"I am called Michael\").</p><p><span class='ex'>Frau</span> = Ms./Mrs. and <span class='ex'>Herr</span> = Mr. before a last name.</p>",
+  words:[["ich","I"],["du","you"],["bin","am"],["bist","are (with du)"],["heiße","am called"],["die Frau","woman, Ms."],["der Herr","Mr., gentleman"],["aus","from"],["und","and"],["wer","who"]],
+  sents:[["Ich bin Anna.","I am Anna.",{en:["I'm Anna."]}],["Ich heiße Michael.","My name is Michael.",{en:["I am called Michael."]}],["Wer bist du?","Who are you?"],["Ich bin aus Berlin.","I am from Berlin.",{en:["I'm from Berlin."]}],["Ich bin Frau Schmidt.","I am Ms. Schmidt."],["Bist du Lukas?","Are you Lukas?"]]},
+
+ {title:"Order at a café", color:"#1cb0f6",
+  tip:"<p>When ordering you can just name the item and add <span class='ex'>bitte</span>: <span class='ex'>Ein Kaffee, bitte.</span></p><p><span class='ex'>ein</span> goes with der and das words, <span class='ex'>eine</span> with die words: <span class='ex'>ein Tee</span>, <span class='ex'>eine Milch</span>.</p>",
+  words:[["der Kaffee","coffee"],["der Tee","tea"],["das Wasser","water"],["die Milch","milk"],["der Saft","juice"],["der Zucker","sugar"],["mit","with"],["oder","or"],["ein","a, an (der/das words)"],["eine","a, an (die words)"]],
+  sents:[["Ein Kaffee, bitte.","A coffee, please."],["Tee mit Milch, bitte.","Tea with milk, please."],["Kaffee oder Tee?","Coffee or tea?"],["Kaffee mit Milch und Zucker.","Coffee with milk and sugar."],["Ein Wasser, bitte.","A water, please."]]},
+
+ {title:"Talk about jobs", color:"#ff9600",
+  tip:"<p>Many jobs add <span class='ex'>-in</span> for a woman: <span class='ex'>der Lehrer</span> / <span class='ex'>die Lehrerin</span>.</p><p>German leaves out \"a\" with jobs: <span class='ex'>Er ist Lehrer.</span> = He is a teacher.</p>",
+  words:[["der Lehrer","teacher (man)"],["die Lehrerin","teacher (woman)"],["der Verkäufer","salesman"],["die Verkäuferin","saleswoman"],["der Bäcker","baker (man)"],["die Bäckerin","baker (woman)"],["der Musiker","musician"],["er","he"],["sie","she"],["ist","is"],["mein","my"],["dein","your"]],
+  sents:[["Er ist Lehrer.","He is a teacher."],["Sie ist Bäckerin.","She is a baker."],["Bist du Musiker?","Are you a musician?"],["Ich bin Lehrerin.","I am a teacher.",{en:["I'm a teacher."]}],["Nein, ich bin Verkäufer.","No, I am a salesman.",{en:["No, I'm a salesman."]}]]},
+
+ {title:"Sports and hobbies", color:"#ff4b4b",
+  tip:"<p>Verbs change their ending with the person. With <span class='ex'>spielen</span>:</p><p><span class='ex'>ich spiele</span>, <span class='ex'>du spielst</span>, <span class='ex'>er/sie spielt</span>, <span class='ex'>wir spielen</span>.</p><p>Words like <span class='ex'>oft</span> (often) and <span class='ex'>nie</span> (never) usually come right after the verb.</p>",
+  words:[["spielen","to play"],["der Fußball","soccer"],["das Tennis","tennis"],["schwimmen","to swim"],["joggen","to jog"],["wandern","to hike"],["machen","to do, to make"],["der Sport","sports"],["das Yoga","yoga"],["oft","often"],["nie","never"],["sportlich","athletic"],["wir","we"]],
+  sents:[["Ich spiele oft Tennis.","I often play tennis.",{de:["Oft spiele ich Tennis."],en:["I play tennis often."]}],["Wir spielen Fußball.","We play soccer.",{en:["We are playing soccer."]}],["Du bist sportlich.","You are athletic.",{en:["You're athletic."]}],["Ich schwimme nie.","I never swim."],["Wir machen Yoga.","We do yoga.",{en:["We are doing yoga."]}],["Wir wandern oft.","We often hike.",{en:["We hike often."]}]]},
+
+ {title:"At a party", color:"#2b70c9",
+  tip:"<p><span class='ex'>sind</span> is \"are\" for <span class='ex'>wir</span> (we) and <span class='ex'>sie</span> (they): <span class='ex'>Wir sind draußen.</span></p><p><span class='ex'>zu</span> before an adjective means \"too\": <span class='ex'>zu laut</span> = too loud.</p>",
+  words:[["die Party","party"],["die Musik","music"],["laut","loud, noisy"],["cool","cool"],["trinken","to drink"],["die Cola","cola"],["durstig","thirsty"],["die Toilette","restroom, toilet"],["draußen","outside"],["sehr","very"],["sind","are (we, they)"],["mehr","more"],["brauchen","to need"],["zu","too"],["wo","where"]],
+  sents:[["Die Musik ist zu laut.","The music is too loud."],["Ich bin sehr durstig.","I am very thirsty.",{en:["I'm very thirsty."]}],["Wir brauchen mehr Cola.","We need more cola."],["Wo ist die Toilette?","Where is the restroom?",{en:["Where is the toilet?","Where's the restroom?"]}],["Die Party ist cool.","The party is cool."],["Wir sind draußen.","We are outside.",{en:["We're outside."]}]]},
+
+ {title:"Going home", color:"#00cd9c",
+  tip:"<p><span class='ex'>nach Hause</span> means going home (toward home). <span class='ex'>Ich gehe nach Hause.</span> = I'm going home.</p><p><span class='ex'>Guck mal!</span> is a casual \"Look!\"</p>",
+  words:[["nach Hause","home (going home)"],["das Handy","cell phone"],["müde","tired"],["gehen","to go, to walk"],["das Taxi","taxi"],["guck mal","look"],["wirklich","really"],["jetzt","now"]],
+  sents:[["Ich bin wirklich müde.","I am really tired.",{en:["I'm really tired."]}],["Wir gehen jetzt nach Hause.","We are going home now.",{de:["Jetzt gehen wir nach Hause."],en:["We're going home now.","We go home now."]}],["Wo ist mein Handy?","Where is my phone?",{en:["Where is my cell phone?","Where's my phone?"]}],["Guck mal, ein Taxi!","Look, a taxi!"],["Gehst du nach Hause?","Are you going home?"]]},
+
+ {title:"Numbers 1 to 10", color:"#ffc800",
+  tip:"<p>Counting: <span class='ex'>eins, zwei, drei, vier, fünf, sechs, sieben, acht, neun, zehn</span>.</p><p>When ordering, <span class='ex'>Zwei Kaffee, bitte</span> is normal. Kaffee stays the same.</p>",
+  words:[["eins","one"],["zwei","two"],["drei","three"],["vier","four"],["fünf","five"],["sechs","six"],["sieben","seven"],["acht","eight"],["neun","nine"],["zehn","ten"]],
+  sents:[["Zwei Kaffee, bitte.","Two coffees, please."],["Eins, zwei, drei!","One, two, three!"],["Wir sind vier.","There are four of us."]]},
+
+ {title:"Talk about food prices", color:"#ff4b4b",
+  tip:"<p>Every German noun has a gender, shown by its article. Learn each noun with its article.</p><p><b>the:</b> <span class='ex'>der</span> Kaffee (masculine), <span class='ex'>die</span> Pizza (feminine), <span class='ex'>das</span> Café (neuter)</p><p><b>a/an:</b> <span class='ex'>ein</span> Salat, <span class='ex'>eine</span> Pizza, <span class='ex'>ein</span> Eis</p><p><span class='ex'>Was kostet...?</span> / <span class='ex'>Wie viel kostet...?</span> = How much is...?</p>",
+  words:[["kosten","to cost"],["der Euro","euro"],["das Eis","ice cream"],["das Sandwich","sandwich"],["die Brezel","pretzel"],["der Imbiss","snack bar, deli"],["geöffnet","open"],["die Pizza","pizza"],["der Salat","salad"],["das Café","café"],["was","what"],["wie viel","how much"]],
+  sents:[["Kostet ein Tee drei Euro?","Does a tea cost three euros?"],["Was kostet das Eis?","What does the ice cream cost?",{en:["How much is the ice cream?","How much does the ice cream cost?"]}],["Die Brezel kostet zwei Euro.","The pretzel costs two euros."],["Der Imbiss ist geöffnet.","The snack bar is open."],["Wie viel kostet die Pizza?","How much does the pizza cost?",{en:["How much is the pizza?"]}],["Ein Sandwich kostet vier Euro.","A sandwich costs four euros."]]},
+
+ {title:"Comment on food and drink", color:"#58cc02",
+  tip:"<p>After <span class='ex'>ist</span>, adjectives keep their plain form: <span class='ex'>Das Eis ist lecker.</span></p><p><span class='ex'>nicht</span> (not) comes before the adjective: <span class='ex'>Der Tee ist nicht süß.</span></p><p><span class='ex'>schmeckt</span> = tastes: <span class='ex'>Das Brot schmeckt gut.</span></p>",
+  words:[["lecker","delicious, tasty"],["gut","good"],["süß","sweet"],["salzig","salty"],["scharf","spicy"],["kalt","cold"],["warm","warm"],["das Brot","bread"],["der Apfel","apple"],["schmeckt","tastes"],["nicht","not"],["auch","also, too"]],
+  sents:[["Das Eis ist lecker.","The ice cream is delicious.",{en:["The ice cream is tasty."]}],["Die Pizza ist zu salzig.","The pizza is too salty."],["Der Kaffee ist kalt.","The coffee is cold."],["Das Brot schmeckt gut.","The bread tastes good."],["Der Tee ist nicht süß.","The tea is not sweet.",{en:["The tea isn't sweet."]}],["Der Salat ist auch gut.","The salad is also good.",{en:["The salad is good too."]}]]}
+];
+const LESSONS_PER_UNIT = 4; // lesson 4 = unit review
+const KNOWN_UNITS = 8;      // matches Duolingo progress: units 1-8 done, start at unit 9
+
+/* ============ STATE ============ */
+const KEY = "meinDeutsch.v1";
+const today = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const yesterday = () => { const d=new Date(); d.setDate(d.getDate()-1); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+function freshState(){
+  const done = {}; for(let u=0;u<KNOWN_UNITS;u++) done[u]=LESSONS_PER_UNIT;
+  return {xp:0, streak:0, lastDay:null, dayXp:0, xpDay:null, goal:20, listen:true, rate:0.9, done, mistakes:{}, seen:{}, lessons:0};
+}
+let S;
+try { S = Object.assign(freshState(), JSON.parse(localStorage.getItem(KEY)||"null")||{}); } catch(e){ S = freshState(); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ============ AUDIO ============ */
+const canSpeak = "speechSynthesis" in window;
+let deVoice = null;
+function pickVoice(){ if(!canSpeak) return; const v = speechSynthesis.getVoices(); deVoice = v.find(x=>/^de[-_]DE/i.test(x.lang)) || v.find(x=>/^de/i.test(x.lang)) || null; }
+if(canSpeak){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(text, slow){
+  if(!canSpeak) return;
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang="de-DE"; if(deVoice) u.voice=deVoice; u.rate = slow?0.55:S.rate; speechSynthesis.speak(u);}catch(e){}
+}
+let actx=null;
+function chime(good){
+  try{ actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const notes = good?[660,880]:[220,180]; notes.forEach((f,i)=>{ const o=actx.createOscillator(), g=actx.createGain();
+      o.type=good?"sine":"square"; o.frequency.value=f; g.gain.setValueAtTime(.0001,actx.currentTime+i*.11);
+      g.gain.exponentialRampToValueAtTime(good?.25:.08,actx.currentTime+i*.11+.02); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+i*.11+.18);
+      o.connect(g).connect(actx.destination); o.start(actx.currentTime+i*.11); o.stop(actx.currentTime+i*.11+.2); });
+  }catch(e){}
+}
+
+/* ============ HELPERS ============ */
+const $ = s => document.querySelector(s);
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const pick = (a,n) => shuffle(a).slice(0,n);
+const norm = s => s.toLowerCase().replace(/[.,!?¿¡"]/g,"").replace(/\s+/g," ").trim();
+const tokens = s => s.replace(/[.,!?¿¡"]/g,"").split(/\s+/).filter(Boolean);
+const esc = s => s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ART = /^(der|die|das) /;
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
+function level(){ return Math.floor(S.xp/100)+1; }
+function liveStreak(){ return (S.lastDay===today()||S.lastDay===yesterday()) ? S.streak : 0; }
+function dayXp(){ return S.xpDay===today()? S.dayXp : 0; }
+function unlockedUnit(u){ return u===0 || (S.done[u-1]||0)>=LESSONS_PER_UNIT || (S.done[u]||0)>0; }
+function currentPos(){ for(let u=0;u<UNITS.length;u++){ const d=S.done[u]||0; if(d<LESSONS_PER_UNIT) return {u, l:d}; } return {u:UNITS.length-1, l:LESSONS_PER_UNIT-1, all:true}; }
+function wordKey(w){ return w[0]; }
+
+/* ============ HEADER ============ */
+function renderHeader(){
+  $("#lvl").textContent = level();
+  $("#streak").textContent = liveStreak();
+  $("#streakBox").classList.toggle("off", S.lastDay!==today());
+  $("#xp").textContent = S.xp;
+  const frac = Math.min(1, dayXp()/S.goal);
+  $("#goalArc").setAttribute("stroke-dashoffset", (94.2*(1-frac)).toFixed(1));
+}
+
+/* ============ LEARN TAB (path) ============ */
+const ICONS = ["⭐","📘","🎧","🏆"];
+function renderLearn(){
+  const pos = currentPos();
+  const offsets = [0,-60,-90,-60,0,60,90,60];
+  let html = "";
+  UNITS.forEach((un,u)=>{
+    html += `<div class="unit" id="unit-${u}"><div class="banner" style="background:${un.color}">
+      <div><small>Unit ${u+1}</small><b>${esc(un.title)}</b></div>
+      <button data-guide="${u}" aria-label="Guidebook">📒</button></div><div class="nodes">`;
+    for(let l=0;l<LESSONS_PER_UNIT;l++){
+      const done = (S.done[u]||0) > l;
+      const isCur = !pos.all && pos.u===u && pos.l===l;
+      const cls = done ? "done" : isCur ? "current" : "locked";
+      const style = isCur ? `--bg-n:${un.color};--sh:rgba(0,0,0,.35)` : "";
+      const off = offsets[(u*LESSONS_PER_UNIT+l)%offsets.length];
+      html += `<button class="node ${cls}" style="margin-left:${off*2}px;${style}" data-u="${u}" data-l="${l}">
+        ${cls==="locked"?"🔒":ICONS[l]}${isCur?'<span class="start">START</span>':""}</button>`;
+    }
+    html += `</div></div>`;
+  });
+  html += `<div class="pad" style="text-align:center;color:var(--muted)">More units coming. Keep going! 💪</div>`;
+  $("#tab-learn").innerHTML = html;
+}
+$("#tab-learn").addEventListener("click", e=>{
+  const g = e.target.closest("[data-guide]"); if(g){ openGuide(+g.dataset.guide); return; }
+  const n = e.target.closest(".node"); if(!n) return;
+  const u=+n.dataset.u, l=+n.dataset.l;
+  if(n.classList.contains("locked")){ toast("Finish the lessons above to unlock this one"); return; }
+  startLesson({unit:u, lesson:l});
+});
+function openGuide(u){
+  const un = UNITS[u];
+  const m = document.createElement("div"); m.className="modal";
+  m.innerHTML = `<div class="sheet"><h2>📒 Unit ${u+1}: ${esc(un.title)}</h2>${un.tip}
+    <h3 style="margin-top:20px">Key phrases</h3>${un.sents.slice(0,4).map(s=>`<div class="wordrow"><button class="spk" data-say="${esc(s[0])}">🔊</button><div><b>${esc(s[0])}</b><small>${esc(s[1])}</small></div></div>`).join("")}
+    <h3 style="margin-top:20px">Words</h3>${un.words.map(w=>`<div class="wordrow"><button class="spk" data-say="${esc(w[0])}">🔊</button><div><b>${esc(w[0])}</b><small>${esc(w[1])}</small></div></div>`).join("")}
+    <button class="btn blue" style="margin-top:18px" data-close>Got it</button></div>`;
+  m.addEventListener("click", e=>{ if(e.target===m||e.target.closest("[data-close]")) m.remove(); const s=e.target.closest("[data-say]"); if(s) speak(s.dataset.say); });
+  document.body.appendChild(m);
+}
+
+/* ============ OTHER TABS ============ */
+function unlockedWords(){ const out=[]; UNITS.forEach((un,u)=>{ if(unlockedUnit(u)) un.words.forEach(w=>out.push({w,u})); }); return out; }
+function renderPractice(){
+  const weak = Object.keys(S.mistakes).filter(k=>S.mistakes[k]>0).length;
+  $("#tab-practice").innerHTML = `<h2>Practice</h2>
+    <div class="card"><b style="font-size:19px">🧠 Mistakes review</b><p style="color:var(--muted)">${weak?`${weak} word${weak>1?"s":""} you've missed. Clear them by getting them right.`:"No missed words right now. Nice work!"}</p>
+      <button class="btn red" id="pMist" ${weak?"":"disabled"}>Review mistakes</button></div>
+    <div class="card"><b style="font-size:19px">🔀 Mixed practice</b><p style="color:var(--muted)">A random mix from every unit you've unlocked.</p>
+      <button class="btn blue" id="pMix">Start +10 XP</button></div>
+    ${canSpeak?`<div class="card"><b style="font-size:19px">🎧 Listening only</b><p style="color:var(--muted)">Hear German, pick or build what was said.</p><button class="btn" id="pListen">Start +10 XP</button></div>`:""}`;
+  $("#pMix").onclick = ()=>startLesson({mode:"mix"});
+  const pm=$("#pMist"); if(pm) pm.onclick = ()=>startLesson({mode:"mistakes"});
+  const pl=$("#pListen"); if(pl) pl.onclick = ()=>startLesson({mode:"listen"});
+}
+function renderWords(){
+  const list = unlockedWords();
+  $("#tab-words").innerHTML = `<h2>My words <span style="color:var(--muted);font-size:18px">(${list.length})</span></h2>
+   <div class="card">${list.map(({w})=>`<div class="wordrow"><button class="spk" data-say="${esc(w[0])}">🔊</button><div><b>${esc(w[0])}</b><small>${esc(w[1])}</small></div>${S.mistakes[wordKey(w)]>0?'<span class="dot" title="needs practice"></span>':""}</div>`).join("")}</div>`;
+}
+$("#tab-words").addEventListener("click", e=>{ const s=e.target.closest("[data-say]"); if(s) speak(s.dataset.say); });
+function renderMe(){
+  const lv=level(), into=S.xp%100;
+  $("#tab-me").innerHTML = `<h2>Me</h2>
+   <div class="card"><b style="font-size:20px">Level ${lv}</b><span style="float:right;color:var(--muted)">${into}/100 XP</span><div class="levelbar"><i style="width:${into}%"></i></div>
+     <p style="color:var(--muted);margin-bottom:0">🔥 ${liveStreak()} day streak · ⚡ ${S.xp} total XP · ✅ ${S.lessons} lessons</p></div>
+   <div class="card"><b>Daily goal</b><p style="color:var(--muted);margin:6px 0 10px">${dayXp()} / ${S.goal} XP today</p>
+     <div class="seg" id="goalSeg">${[10,20,30,50].map(g=>`<button data-g="${g}" class="${S.goal===g?"on":""}">${g}</button>`).join("")}</div></div>
+   <div class="card"><b>Listening exercises</b><p style="color:var(--muted);margin:6px 0 10px">${canSpeak?"Turn off when you can't use sound.":"Your browser has no speech voice, so listening is off."}</p>
+     <div class="seg" id="listenSeg"><button data-v="1" class="${S.listen?"on":""}">On</button><button data-v="0" class="${!S.listen?"on":""}">Off</button></div>
+     <p style="color:var(--muted);margin:14px 0 10px">Voice speed</p>
+     <div class="seg" id="rateSeg">${[[0.7,"Slow"],[0.9,"Normal"],[1.05,"Fast"]].map(([r,n])=>`<button data-r="${r}" class="${S.rate===r?"on":""}">${n}</button>`).join("")}</div>
+     <button class="btn ghost" style="margin-top:14px" id="testVoice">🔊 Test voice</button></div>
+   <div class="card"><b>Starting point</b><p style="color:var(--muted);margin:6px 0 10px">Mark units as done if you already know them.</p>
+     <select id="startSel" style="width:100%;padding:12px;border-radius:12px;background:var(--bg);color:var(--text);border:2px solid var(--line);font-size:16px">
+     ${UNITS.map((un,u)=>`<option value="${u}" ${currentPos().u===u?"selected":""}>Start at Unit ${u+1}: ${esc(un.title)}</option>`).join("")}</select>
+     <button class="btn blue" style="margin-top:12px" id="startSet">Set starting point</button></div>
+   <button class="btn ghost" id="resetBtn">Reset all progress</button>`;
+  $("#goalSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; S.goal=+b.dataset.g; save(); renderMe(); renderHeader(); };
+  $("#listenSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; S.listen=b.dataset.v==="1"; save(); renderMe(); };
+  $("#rateSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; S.rate=+b.dataset.r; save(); renderMe(); speak("Guten Morgen! Wie geht's?"); };
+  $("#testVoice").onclick = ()=>{ speak("Hallo! Ich lerne Deutsch."); if(canSpeak && !deVoice) toast("No German voice found. Install German in your phone's text-to-speech settings."); };
+  $("#startSet").onclick = ()=>{ const t=+$("#startSel").value; for(let u=0;u<UNITS.length;u++){ if(u<t) S.done[u]=LESSONS_PER_UNIT; else S.done[u]=0; } save(); refresh(); toast("Starting point set to Unit "+(t+1)); };
+  $("#resetBtn").onclick = ()=>{ if(confirmReset()) { S=freshState(); save(); refresh(); toast("Progress reset"); } };
+}
+let resetArmed=false;
+function confirmReset(){ if(resetArmed){ resetArmed=false; return true; } resetArmed=true; toast("Tap reset again to confirm"); setTimeout(()=>resetArmed=false,3000); return false; }
+
+document.querySelector(".nav").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("on",x===b));
+  ["learn","practice","words","me"].forEach(t=>$("#tab-"+t).classList.toggle("hidden", t!==b.dataset.tab));
+  refresh(); window.scrollTo(0,0);
+});
+function refresh(){ renderHeader(); renderLearn(); renderPractice(); renderWords(); renderMe(); }
+
+/* ============ LESSON ENGINE ============ */
+let L = null; // current lesson
+function poolFor(opts){
+  if(opts.mode){
+    const units = UNITS.map((un,u)=>u).filter(unlockedUnit);
+    let words=[], sents=[];
+    units.forEach(u=>{ words=words.concat(UNITS[u].words); sents=sents.concat(UNITS[u].sents); });
+    if(opts.mode==="mistakes"){ words = words.filter(w=>S.mistakes[wordKey(w)]>0); }
+    return {words, sents, allWords:units.flatMap(u=>UNITS[u].words), allSents:units.flatMap(u=>UNITS[u].sents)};
+  }
+  const un = UNITS[opts.unit];
+  if(opts.lesson===LESSONS_PER_UNIT-1){ // review: this unit plus a bit of earlier units
+    let words = un.words.slice(), sents = un.sents.slice();
+    for(let u=0;u<opts.unit;u++){ words = words.concat(pick(UNITS[u].words,2)); sents = sents.concat(pick(UNITS[u].sents,1)); }
+    return {words, sents, allWords:UNITS.slice(0,opts.unit+1).flatMap(x=>x.words), allSents:UNITS.slice(0,opts.unit+1).flatMap(x=>x.sents)};
+  }
+  return {words:un.words, sents:un.sents, allWords:UNITS.slice(0,opts.unit+1).flatMap(x=>x.words), allSents:UNITS.slice(0,opts.unit+1).flatMap(x=>x.sents)};
+}
+function buildExercises(opts){
+  const P = poolFor(opts);
+  const listenOK = canSpeak && S.listen;
+  const ex = [];
+  const nouns = P.words.filter(w=>ART.test(w[0]));
+  // new-word cards the first time a unit beyond the known ones is opened
+  if(!opts.mode && opts.lesson===0){
+    P.words.filter(w=>!S.seen[wordKey(w)] && opts.unit>=KNOWN_UNITS).slice(0,5).forEach(w=>ex.push({t:"new", w}));
+  }
+  let plan;
+  if(opts.mode==="listen") plan = ["listen","lbuild","listen","lbuild","mc_de","lbuild","listen","lbuild","listen","lbuild"];
+  else if(opts.mode==="mistakes") plan = ["mc_en","mc_de","article","mc_en","match","mc_de","mc_en","article","mc_de","build_de"];
+  else if(opts.mode) plan = ["mc_en","build_de","listen","article","match","build_en","mc_de","lbuild","build_de","mc_en"];
+  else plan = [
+    ["mc_de","mc_en","article","match","listen","mc_en","build_de","mc_de","article","build_en","lbuild","build_de"],
+    ["mc_en","build_de","article","listen","build_en","match","mc_de","lbuild","build_de","article","build_en","mc_en"],
+    ["build_de","build_en","lbuild","article","build_de","match","listen","build_en","mc_en","build_de","lbuild","build_de"],
+    ["match","build_de","mc_en","article","lbuild","build_en","listen","build_de","mc_de","build_en","article","build_de"]
+  ][opts.lesson];
+  const wq = shuffle(P.words), sq = shuffle(P.sents);
+  let wi=0, si=0;
+  const nextW = () => wq.length ? wq[(wi++)%wq.length] : null;
+  const nextS = () => sq.length ? sq[(si++)%sq.length] : null;
+  plan.forEach(t=>{
+    if((t==="listen"||t==="lbuild") && !listenOK) t = t==="listen" ? "mc_de" : "build_de";
+    if(t==="article" && !nouns.length) t="mc_en";
+    if((t.startsWith("build")||t==="lbuild") && !P.sents.length) t="mc_en";
+    if(t==="match" && P.words.length<4) t="mc_de";
+    if(t==="match") ex.push({t, words:pick(P.words,Math.min(5,P.words.length))});
+    else if(t==="article") ex.push({t, w:pick(nouns,1)[0]});
+    else if(t.startsWith("mc")) { const w=nextW(); if(w) ex.push({t, w}); }
+    else if(t==="listen") ex.push({t, s: Math.random()<.5 ? nextS() : null, w: nextW()});
+    else { const s=nextS(); if(s) ex.push({t, s}); }
+  });
+  return {ex, P};
+}
+function startLesson(opts){
+  const {ex,P} = buildExercises(opts);
+  if(!ex.length){ toast("Nothing to practice here yet"); return; }
+  L = {opts, queue:ex, total:ex.length, doneCount:0, firstTry:0, missed:new Set(), P, cur:null, answered:false};
+  $("#lesson").classList.remove("hidden"); document.body.style.overflow="hidden";
+  nextExercise();
+}
+$("#quitBtn").onclick = ()=>{ if(L && L.doneCount>0 && !L.finished){ if(!quitArmed){ quitArmed=true; toast("Tap ✕ again to quit (progress in this lesson is lost)"); setTimeout(()=>quitArmed=false,2500); return; } } quitArmed=false; closeLesson(); };
+let quitArmed=false;
+function closeLesson(){ if(canSpeak) speechSynthesis.cancel(); $("#lesson").classList.add("hidden"); document.body.style.overflow=""; L=null; refresh(); }
+
+function setFoot(state, html){
+  const f=$("#lfoot"); f.className="lfoot"+(state?" "+state:""); $("#fb").innerHTML=html||"";
+}
+function setCheck(label, enabled, fn){ const b=$("#checkBtn"); b.textContent=label; b.disabled=!enabled; b.onclick=fn; }
+
+function distractWords(correct, field, n){
+  const pool = L.P.allWords.filter(w=>w[field]!==correct[field] && norm(w[1])!==norm(correct[1]));
+  const seen=new Set([norm(correct[field])]); const out=[];
+  for(const w of shuffle(pool)){ const k=norm(w[field]); if(!seen.has(k)){ seen.add(k); out.push(w);} if(out.length>=n) break; }
+  return out;
+}
+
+function nextExercise(){
+  $("#progBar").style.width = (100*L.doneCount/L.total)+"%";
+  if(!L.queue.length) return finishLesson();
+  const e = L.cur = L.queue.shift(); L.answered=false; L.sel=null;
+  setFoot("", "");
+  const body = $("#lbody"); body.scrollTop=0;
+  ({new:rNew, mc_de:rMC, mc_en:rMC, article:rArticle, match:rMatch, listen:rListen, build_de:rBuild, build_en:rBuild, lbuild:rBuild})[e.t](e, body);
+}
+
+function rNew(e, body){
+  S.seen[wordKey(e.w)]=1; save();
+  body.innerHTML = `<div class="newcard"><span class="tag">NEW WORD</span><div class="de">${esc(e.w[0])}</div><div class="en">${esc(e.w[1])}</div>
+    <div style="margin-top:26px"><button class="bigspk" id="say">🔊</button></div></div>`;
+  $("#say").onclick=()=>speak(e.w[0]); setTimeout(()=>speak(e.w[0]),250);
+  setCheck("Continue", true, ()=>{ L.total--; nextExercise(); });
+}
+
+function rMC(e, body){
+  const toEn = e.t==="mc_de";
+  const opts = shuffle([e.w, ...distractWords(e.w, toEn?1:0, 3)]);
+  body.innerHTML = `<div class="qtitle">${toEn?"What does this mean?":"Which one means this?"}</div>
+    <div class="prompt">${toEn?`<button class="smallspk" id="say">🔊</button>`:""}<div class="bubble">${esc(toEn?e.w[0]:e.w[1])}</div></div>
+    <div class="choices">${opts.map((o,i)=>`<button class="choice" data-i="${i}">${esc(toEn?o[1]:o[0])}</button>`).join("")}</div>`;
+  if(toEn){ $("#say").onclick=()=>speak(e.w[0]); setTimeout(()=>speak(e.w[0]),250); }
+  wireChoices(opts.map(o=>o===e.w), toEn?e.w[1]:e.w[0], [e.w], ()=>{ if(!toEn) speak(e.w[0]); });
+}
+function rArticle(e, body){
+  const noun = e.w[0].replace(ART,""), art = e.w[0].match(ART)[1];
+  const opts = ["der","die","das"];
+  body.innerHTML = `<div class="qtitle">Pick the right article</div>
+    <div class="prompt"><div class="bubble"><b style="color:var(--blue)">___</b> ${esc(noun)}<div style="color:var(--muted);font-size:15px;margin-top:4px">${esc(e.w[1])}</div></div></div>
+    <div class="grid2" style="grid-template-columns:1fr 1fr 1fr">${opts.map((o,i)=>`<button class="choice" style="text-align:center" data-i="${i}">${o}</button>`).join("")}</div>`;
+  wireChoices(opts.map(o=>o===art), e.w[0], [e.w], ()=>speak(e.w[0]));
+}
+function rListen(e, body){
+  const isS = !!e.s;
+  const target = isS ? e.s[0] : e.w[0];
+  let opts;
+  if(isS){ opts = shuffle([e.s[0], ...pick(L.P.allSents.filter(s=>s[0]!==e.s[0]).map(s=>s[0]),3)]); }
+  else { opts = shuffle([e.w[0], ...distractWords(e.w,0,3).map(w=>w[0])]); }
+  body.innerHTML = `<div class="qtitle">What do you hear?</div>
+    <div class="row" style="justify-content:center;gap:16px;margin:10px 0 28px"><button class="bigspk" id="say">🔊</button><button class="smallspk" id="slow">🐢</button></div>
+    <div class="choices">${opts.map((o,i)=>`<button class="choice" data-i="${i}">${esc(o)}</button>`).join("")}</div>`;
+  $("#say").onclick=()=>speak(target); $("#slow").onclick=()=>speak(target,true); setTimeout(()=>speak(target),300);
+  wireChoices(opts.map(o=>o===target), target, isS?[]:[e.w]);
+}
+function wireChoices(correctFlags, answerText, words, onRight){
+  const btns = [...document.querySelectorAll("#lbody .choice")];
+  btns.forEach(b=>b.onclick=()=>{ if(L.answered) return; btns.forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); L.sel=+b.dataset.i; setCheck("Check", true, check); });
+  setCheck("Check", false, null);
+  function check(){
+    const ok = correctFlags[L.sel];
+    btns[L.sel].classList.remove("sel"); btns[L.sel].classList.add(ok?"right":"wrong");
+    if(!ok) btns[correctFlags.indexOf(true)].classList.add("right");
+    if(ok && onRight) onRight();
+    grade(ok, answerText, words);
+  }
+}
+
+function rMatch(e, body){
+  const left = shuffle(e.words), right = shuffle(e.words);
+  body.innerHTML = `<div class="qtitle">Tap the matching pairs</div><div class="grid2">
+    <div class="choices">${left.map(w=>`<button class="choice" style="text-align:center" data-side="L" data-k="${esc(w[0])}">${esc(w[0])}</button>`).join("")}</div>
+    <div class="choices">${right.map(w=>`<button class="choice" style="text-align:center" data-side="R" data-k="${esc(w[0])}">${esc(w[1])}</button>`).join("")}</div></div>`;
+  let selL=null, selR=null, matched=0, errors=0;
+  setCheck("Check", false, null);
+  body.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{
+    if(b.classList.contains("gone")) return;
+    if(b.dataset.side==="L"){ if(selL) selL.classList.remove("sel"); selL=b; speak(b.dataset.k); } else { if(selR) selR.classList.remove("sel"); selR=b; }
+    b.classList.add("sel");
+    if(selL && selR){
+      const a=selL, c=selR; selL=selR=null;
+      if(a.dataset.k===c.dataset.k){ [a,c].forEach(x=>{x.classList.remove("sel");x.classList.add("right");}); setTimeout(()=>[a,c].forEach(x=>x.classList.add("gone")),250); matched++;
+        if(matched===e.words.length){ chime(true); grade(errors===0, "", errors?[]:[], true); } }
+      else { errors++; chime(false); [a,c].forEach(x=>{x.classList.remove("sel");x.classList.add("wrong","shake");}); setTimeout(()=>[a,c].forEach(x=>x.classList.remove("wrong","shake")),450);
+        const w=e.words.find(w=>w[0]===a.dataset.k); if(w){ S.mistakes[wordKey(w)]=(S.mistakes[wordKey(w)]||0)+1; } }
+    }
+  });
+}
+
+function rBuild(e, body){
+  const s = e.s, alt = s[2]||{};
+  const toDe = e.t!=="build_en"; // build_de and lbuild produce German
+  const answers = toDe ? [s[0], ...(alt.de||[])] : [s[1], ...(alt.en||[])];
+  const ansTok = tokens(answers[0]);
+  const otherPool = L.P.allSents.filter(x=>x!==s).flatMap(x=>tokens(toDe?x[0]:x[1]));
+  const lowAns = new Set(ansTok.map(t=>t.toLowerCase()));
+  const extras = []; const seenX=new Set();
+  for(const t of shuffle(otherPool)){ const k=t.toLowerCase(); if(!lowAns.has(k)&&!seenX.has(k)){ seenX.add(k); extras.push(t);} if(extras.length>=Math.min(4, Math.max(2, 7-ansTok.length))) break; }
+  const bank = shuffle([...ansTok, ...extras]).map((t,i)=>({t,i}));
+  let line = [];
+  const head = e.t==="lbuild"
+    ? `<div class="qtitle">Tap what you hear</div><div class="row" style="justify-content:center;gap:16px;margin-bottom:18px"><button class="bigspk" id="say">🔊</button><button class="smallspk" id="slow">🐢</button></div>`
+    : `<div class="qtitle">Write this in ${toDe?"German":"English"}</div><div class="prompt">${toDe?"":`<button class="smallspk" id="say">🔊</button>`}<div class="bubble">${esc(toDe?s[1]:s[0])}</div></div>`;
+  body.innerHTML = head + `<div class="answerline" id="aline"></div><div class="bank" id="bank">${bank.map(b=>`<button class="tok" data-i="${b.i}">${esc(b.t)}</button>`).join("")}</div>`;
+  const sayBtn=$("#say"); if(sayBtn){ sayBtn.onclick=()=>speak(s[0]); setTimeout(()=>speak(s[0]),300); }
+  const slowBtn=$("#slow"); if(slowBtn) slowBtn.onclick=()=>speak(s[0],true);
+  const aline=$("#aline");
+  function draw(){ aline.innerHTML = line.map(i=>`<button class="tok" data-i="${i}">${esc(bank[i].t)}</button>`).join("");
+    document.querySelectorAll("#bank .tok").forEach(b=>b.classList.toggle("used", line.includes(+b.dataset.i)));
+    setCheck("Check", line.length>0, check); }
+  $("#bank").onclick = ev=>{ const b=ev.target.closest(".tok"); if(!b||L.answered) return; const i=+b.dataset.i; if(line.includes(i)) return; line.push(i); if(toDe) speak(bank[i].t); draw(); };
+  aline.onclick = ev=>{ const b=ev.target.closest(".tok"); if(!b||L.answered) return; line=line.filter(x=>x!==+b.dataset.i); draw(); };
+  draw(); setCheck("Check", false, null);
+  function check(){
+    const given = norm(line.map(i=>bank[i].t).join(" "));
+    const ok = answers.some(a=>norm(a)===given);
+    if(ok && !toDe) speak(s[0]);
+    if(ok && toDe && e.t!=="lbuild") speak(s[0]);
+    const relWords = L.P.allWords.filter(w=>{ const core=norm(w[0].replace(ART,"")); return norm(s[0]).split(" ").includes(core.split(" ")[0]); });
+    grade(ok, answers[0], ok?[]:relWords.slice(0,3));
+  }
+}
+
+function grade(ok, answerText, words, isMatch){
+  L.answered = true;
+  if(!isMatch) chime(ok);
+  const e = L.cur;
+  if(ok){
+    if(!L.missed.has(e)) L.firstTry++;
+    L.doneCount++;
+    (words||[]).forEach(w=>{ if(S.mistakes[wordKey(w)]) S.mistakes[wordKey(w)]--; });
+    if(e.w && S.mistakes[wordKey(e.w)]) S.mistakes[wordKey(e.w)]--;
+    const praise = ["Nice!","Richtig!","Great job!","Sehr gut!","Super!","You got it!"];
+    setFoot("ok", `<b>✓ ${praise[Math.floor(Math.random()*praise.length)]}</b>${answerText&&!isMatch?`<div>${esc(answerText)}</div>`:""}`);
+  } else {
+    L.missed.add(e);
+    L.queue.push(e); // comes back at the end, like Duolingo
+    (words||[]).forEach(w=>S.mistakes[wordKey(w)]=(S.mistakes[wordKey(w)]||0)+1);
+    if(e.w) S.mistakes[wordKey(e.w)]=(S.mistakes[wordKey(e.w)]||0)+1;
+    setFoot("bad", `<b>✗ Correct answer:</b><div>${esc(answerText)}</div>`);
+    const lb=$("#lbody"); lb.classList.add("shake"); setTimeout(()=>lb.classList.remove("shake"),400);
+  }
+  save();
+  setCheck("Continue", true, nextExercise);
+}
+
+function finishLesson(){
+  L.finished = true;
+  const counted = L.total || 1;
+  const acc = Math.round(100*L.firstTry/counted);
+  const perfect = L.missed.size===0;
+  const gain = 10 + (perfect?5:0);
+  const goalBefore = dayXp() >= S.goal;
+  // streak
+  const t=today();
+  if(S.lastDay!==t){ S.streak = (S.lastDay===yesterday()) ? S.streak+1 : 1; S.lastDay=t; var streakUp=true; }
+  if(S.xpDay!==t){ S.xpDay=t; S.dayXp=0; }
+  S.xp += gain; S.dayXp += gain; S.lessons++;
+  const o=L.opts;
+  if(!o.mode && (S.done[o.unit]||0)===o.lesson) S.done[o.unit]=o.lesson+1;
+  save();
+  const goalHit = !goalBefore && dayXp()>=S.goal;
+  const unitDone = !o.mode && o.lesson===LESSONS_PER_UNIT-1;
+  $("#progBar").style.width="100%";
+  $("#lbody").innerHTML = `<div class="endwrap">
+    <div class="bigemoji">${unitDone?"🏆":perfect?"🌟":"🎉"}</div>
+    <h1>${unitDone?"Unit complete!":perfect?"Perfect lesson!":"Lesson complete!"}</h1>
+    <div class="tiles">
+      <div class="tile" style="--c:var(--gold)"><small>TOTAL XP</small><b>⚡ ${gain}</b></div>
+      <div class="tile" style="--c:var(--green)"><small>ACCURACY</small><b>🎯 ${acc}%</b></div>
+      <div class="tile" style="--c:var(--orange)"><small>STREAK</small><b>🔥 ${S.streak}</b></div>
+    </div>
+    ${streakUp?`<p style="margin-top:22px;font-weight:800;color:var(--orange)">${S.streak===1?"Streak started! Come back tomorrow.":"Streak extended to "+S.streak+" days!"}</p>`:""}
+    ${goalHit?`<p style="font-weight:800;color:var(--gold)">Daily goal reached! 🎯</p>`:""}
+  </div>`;
+  setFoot("", "");
+  chime(true); setTimeout(()=>chime(true),220);
+  setCheck("Continue", true, closeLesson);
+}
+
+/* ============ BOOT ============ */
+refresh();
+setTimeout(()=>{ const p=currentPos(); const el=document.getElementById("unit-"+p.u); if(el) el.scrollIntoView({block:"start"}); }, 50);
+if("serviceWorker" in navigator && location.protocol==="https:"){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+</script>
+</body>
+</html>
