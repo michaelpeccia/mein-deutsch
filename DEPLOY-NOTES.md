@@ -112,6 +112,16 @@ journalctl -u mein-deutsch-push -n 20 --no-pager
 ollama list
 ```
 
+## Speaking exercises
+- "Speak this sentence": tap 🎤, read it out loud. Green words were heard right, red ones were missed. You get two tries.
+- "Can't speak now" turns speaking off for 15 minutes. Me > Speaking exercises turns it off for good.
+- The speech check uses Google's speech service on your phone, so it needs internet.
+- Practice > Speaking practice is 8 sentences in a row.
+
+## Spaced review
+- Every word has a strength (the bars in the Words tab). Right answers push the next review further out (1, 2, 4, 7, 14, 30 days...). Misses bring the word back today.
+- When words are due, a blue "Review" card shows at the top of the Learn tab and in Practice.
+
 ## Your streak
 Me > Carry over your streak lets you type your Duolingo streak and whether you last practiced today or yesterday. The next lesson adds a day to it.
 

@@ -165,6 +165,20 @@ h2{margin:6px 0 14px;font-size:24px}
 .icbtn.mic{background:var(--card);border:2px solid var(--line);box-shadow:none}
 .icbtn.mic.live{background:var(--red);border-color:var(--red)}
 .icbtn:disabled{opacity:.5}
+.micbig{width:112px;height:112px;border-radius:50%;border:none;background:var(--blue);box-shadow:0 6px 0 var(--blue-d);font-size:46px;cursor:pointer}
+.micbig.live{background:var(--red);box-shadow:0 6px 0 var(--red-d);animation:pulse 1.2s infinite}
+.linkbtn{background:none;border:none;color:var(--blue);font-weight:800;font-size:15px;cursor:pointer;padding:8px}
+#tgt span.hit{color:var(--green)} #tgt span.miss{color:var(--red);text-decoration:underline}
+.section{margin:26px 16px 0;text-align:center}
+.section b{display:block;font-size:13px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.section span{font-size:20px;font-weight:900}
+.reviewcard{margin:16px 16px 0;border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,#1cb0f6,#2b70c9);display:flex;align-items:center;gap:12px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.reviewcard div{flex:1;font-weight:800}
+.reviewcard small{display:block;font-weight:700;opacity:.85}
+.reviewcard button{background:#fff;color:#1899d6;border:none;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}
+.str{display:inline-flex;gap:2px;margin-left:auto;flex:none}
+.str i{width:6px;height:16px;border-radius:2px;background:#37464f}
+.str i.on{background:var(--gold)}
 .shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 </style>
@@ -304,22 +318,77 @@ const UNITS = [
  {title:"Pay the bill", color:"#ff9600",
   tip:"<p>13 to 19 are number + <span class='ex'>zehn</span>: <span class='ex'>dreizehn</span> (13). Then <span class='ex'>zwanzig</span> (20), <span class='ex'>dreißig</span> (30, spelled with ß), <span class='ex'>hundert</span> (100).</p><p>In restaurants the server often asks <span class='ex'>Zusammen oder getrennt?</span> = Together or separately?</p>",
   words:[["elf","eleven"],["zwölf","twelve"],["dreizehn","thirteen"],["zwanzig","twenty"],["dreißig","thirty"],["hundert","hundred"],["teuer","expensive"],["billig","cheap"],["bezahlen","to pay"],["die Rechnung","bill, check"],["zusammen","together"],["getrennt","separately"]],
-  sents:[["Das ist zu teuer.","That is too expensive.",{en:["That's too expensive.","This is too expensive."]}],["Die Rechnung, bitte.","The check, please.",{en:["The bill, please."]}],["Zusammen oder getrennt?","Together or separately?"],["Das kostet zwanzig Euro.","That costs twenty euros.",{en:["It costs twenty euros."]}],["Die Brezel ist billig.","The pretzel is cheap."],["Ich bezahle.","I'm paying.",{en:["I am paying.","I pay."]}]]}
+  sents:[["Das ist zu teuer.","That is too expensive.",{en:["That's too expensive.","This is too expensive."]}],["Die Rechnung, bitte.","The check, please.",{en:["The bill, please."]}],["Zusammen oder getrennt?","Together or separately?"],["Das kostet zwanzig Euro.","That costs twenty euros.",{en:["It costs twenty euros."]}],["Die Brezel ist billig.","The pretzel is cheap."],["Ich bezahle.","I'm paying.",{en:["I am paying.","I pay."]}]]},
+ {title:"Talk about yesterday", color:"#1cb0f6",
+  tip:"<p>Past of <span class='ex'>sein</span>: <span class='ex'>ich war</span>, <span class='ex'>du warst</span>, <span class='ex'>er/sie war</span>, <span class='ex'>wir waren</span>.</p><p>Past of <span class='ex'>haben</span>: <span class='ex'>ich hatte</span>, <span class='ex'>du hattest</span>, <span class='ex'>er/sie hatte</span>, <span class='ex'>wir hatten</span>.</p><p>German says \"I have hunger\": <span class='ex'>Ich habe Hunger.</span> = I'm hungry.</p>",
+  words:[["gestern","yesterday"],["war","was (ich, er, sie)"],["warst","were (du)"],["waren","were (wir)"],["hatte","had (ich, er, sie)"],["hattest","had (du)"],["hatten","had (wir)"],["der Hunger","hunger"],["der Durst","thirst"],["krank","sick"],["zu Hause","at home"],["letzte","last"],["keine","no, not any (die words)"],["die Zeit","time"],["in","in"]],
+  sents:[["Gestern war ich krank.","Yesterday I was sick.",{de:["Ich war gestern krank."],en:["I was sick yesterday."]}],["Wir hatten Hunger.","We were hungry."],["Warst du zu Hause?","Were you at home?",{en:["Were you home?"]}],["Die Party war sehr laut.","The party was very loud."],["Ich hatte keine Zeit.","I had no time.",{en:["I didn't have time.","I did not have time."]}],["Letzte Woche waren wir in Berlin.","Last week we were in Berlin.",{de:["Wir waren letzte Woche in Berlin."],en:["We were in Berlin last week."]}]]},
+
+ {title:"What did you do?", color:"#58cc02",
+  tip:"<p>To talk about the past, use <span class='ex'>haben</span> + a past participle at the <b>end</b>: <span class='ex'>Ich habe Pizza gegessen.</span></p><p>Most participles are <span class='ex'>ge-</span> + stem + <span class='ex'>-t</span>: machen → <span class='ex'>gemacht</span>, spielen → <span class='ex'>gespielt</span>, kaufen → <span class='ex'>gekauft</span>.</p><p>Some end in <span class='ex'>-en</span>: essen → <span class='ex'>gegessen</span>, trinken → <span class='ex'>getrunken</span>, lesen → <span class='ex'>gelesen</span>, sehen → <span class='ex'>gesehen</span>.</p>",
+  words:[["gemacht","done, made"],["gespielt","played"],["gekauft","bought"],["gelernt","learned"],["gekocht","cooked"],["gegessen","eaten, ate"],["getrunken","drunk, drank"],["gelesen","read (past)"],["gesehen","seen, saw"],["kaufen","to buy"],["sehen","to see"],["schon","already"]],
+  sents:[["Ich habe Pizza gegessen.","I ate pizza.",{en:["I have eaten pizza.","I've eaten pizza."]}],["Was hast du gemacht?","What did you do?",{en:["What have you done?"]}],["Wir haben Tennis gespielt.","We played tennis.",{en:["We have played tennis."]}],["Sie hat ein Buch gelesen.","She read a book.",{en:["She has read a book."]}],["Hast du den Film gesehen?","Have you seen the movie?",{en:["Did you see the movie?"]}],["Ich habe schon Kaffee getrunken.","I already drank coffee.",{en:["I have already drunk coffee."]}],["Er hat heute gekocht.","He cooked today.",{de:["Heute hat er gekocht."],en:["He has cooked today."]}]]},
+
+ {title:"Where did you go?", color:"#ff9600",
+  tip:"<p>Verbs of movement use <span class='ex'>sein</span> instead of haben in the past: <span class='ex'>Ich bin nach Hause gegangen.</span> = I went home.</p><p>gehen → <span class='ex'>gegangen</span>, fahren → <span class='ex'>gefahren</span>, kommen → <span class='ex'>gekommen</span>, fliegen → <span class='ex'>geflogen</span>, laufen → <span class='ex'>gelaufen</span>.</p><p>Use <span class='ex'>nach</span> with cities and countries: <span class='ex'>nach Berlin</span>, <span class='ex'>nach Deutschland</span>.</p>",
+  words:[["gegangen","gone, went"],["gefahren","driven, went (by vehicle)"],["gekommen","come, came"],["geflogen","flown, flew"],["gelaufen","run, walked"],["fahren","to drive, to go (by vehicle)"],["fliegen","to fly"],["laufen","to run, to walk"],["der Park","park"],["das Auto","car"],["mit dem Auto","by car"],["nach","to (cities, countries)"],["Deutschland","Germany"]],
+  sents:[["Ich bin nach Hause gegangen.","I went home.",{en:["I have gone home."]}],["Wir sind nach Berlin gefahren.","We went to Berlin.",{en:["We drove to Berlin.","We have driven to Berlin."]}],["Bist du mit dem Auto gekommen?","Did you come by car?",{en:["Have you come by car?"]}],["Sie ist nach Deutschland geflogen.","She flew to Germany.",{en:["She has flown to Germany."]}],["Wir sind im Park gelaufen.","We ran in the park.",{en:["We walked in the park."]}],["Gestern bin ich früh gekommen.","Yesterday I came early.",{de:["Ich bin gestern früh gekommen."],en:["I came early yesterday."]}]]},
+
+ {title:"What can you do?", color:"#ce82ff",
+  tip:"<p><span class='ex'>kann</span> (can), <span class='ex'>muss</span> (must, have to), <span class='ex'>will</span> (want to), <span class='ex'>möchte</span> (would like).</p><p>The second verb goes to the <b>end</b> in its basic form: <span class='ex'>Ich kann gut schwimmen.</span></p><p>Careful: <span class='ex'>will</span> means want, not \"will\".</p>",
+  words:[["kann","can (ich, er, sie)"],["kannst","can (du)"],["können","can (wir)"],["muss","must, have to (ich, er, sie)"],["musst","must, have to (du)"],["will","want (ich, er, sie)"],["willst","want (du)"],["möchte","would like"],["helfen","to help"],["mir","me, to me"],["singen","to sing"],["die Gitarre","guitar"]],
+  sents:[["Ich kann gut schwimmen.","I can swim well."],["Kannst du mir helfen?","Can you help me?"],["Ich muss heute arbeiten.","I have to work today.",{de:["Heute muss ich arbeiten."],en:["I must work today."]}],["Wir können Deutsch sprechen.","We can speak German."],["Willst du Gitarre spielen?","Do you want to play guitar?",{en:["Do you want to play the guitar?"]}],["Ich möchte einen Kaffee.","I would like a coffee.",{en:["I'd like a coffee."]}],["Er muss nach Hause gehen.","He has to go home.",{en:["He must go home."]}]]},
+
+ {title:"At the doctor", color:"#ff4b4b",
+  tip:"<p>To say something hurts: <span class='ex'>Mein Kopf tut weh.</span> = My head hurts.</p><p><span class='ex'>Ich habe Kopfschmerzen.</span> = I have a headache.</p><p>Use polite <span class='ex'>Sie</span> with doctors: <span class='ex'>Haben Sie Fieber?</span></p>",
+  words:[["der Arzt","doctor (man)"],["die Ärztin","doctor (woman)"],["der Kopf","head"],["der Bauch","stomach, belly"],["der Arm","arm"],["das Bein","leg"],["der Fuß","foot"],["die Hand","hand"],["tut weh","hurts"],["die Kopfschmerzen","headache"],["die Apotheke","pharmacy"],["das Fieber","fever"],["die Tablette","pill, tablet"],["nehmen","to take"],["zum","to the"]],
+  sents:[["Mein Kopf tut weh.","My head hurts."],["Ich habe Kopfschmerzen.","I have a headache."],["Haben Sie Fieber?","Do you have a fever?"],["Wo ist die Apotheke?","Where is the pharmacy?"],["Das Bein tut sehr weh.","The leg hurts a lot.",{en:["The leg hurts very much."]}],["Ich muss zum Arzt gehen.","I have to go to the doctor.",{en:["I must go to the doctor."]}],["Nehmen Sie eine Tablette.","Take a pill.",{en:["Take a tablet."]}]]},
+
+ {title:"Travel", color:"#00cd9c",
+  tip:"<p><span class='ex'>mit dem Zug</span> = by train, <span class='ex'>mit dem Auto</span> = by car.</p><p>Objects change der words: <span class='ex'>dein Pass</span> → <span class='ex'>Hast du deinen Pass?</span></p><p><span class='ex'>besuchen</span> = to visit: <span class='ex'>Ich möchte Deutschland besuchen.</span></p>",
+  words:[["die Reise","trip, journey"],["reisen","to travel"],["der Zug","train"],["mit dem Zug","by train"],["das Flugzeug","airplane"],["der Flughafen","airport"],["das Ticket","ticket"],["der Koffer","suitcase"],["der Pass","passport"],["die Stadt","city"],["besuchen","to visit"],["schwer","heavy"],["lang","long"]],
+  sents:[["Wir fahren mit dem Zug.","We are going by train.",{en:["We go by train.","We're going by train."]}],["Wo ist der Flughafen?","Where is the airport?"],["Ich habe ein Ticket.","I have a ticket."],["Mein Koffer ist sehr schwer.","My suitcase is very heavy."],["Die Stadt ist schön.","The city is beautiful.",{en:["The city is nice."]}],["Ich möchte Deutschland besuchen.","I would like to visit Germany.",{en:["I'd like to visit Germany."]}],["Die Reise war lang.","The trip was long."],["Hast du deinen Pass?","Do you have your passport?"]]},
+
+ {title:"Grocery shopping", color:"#ffc800",
+  tip:"<p>When a der word is the <b>object</b> (the thing you buy, need or like), <span class='ex'>der</span> → <span class='ex'>den</span> and <span class='ex'>ein</span> → <span class='ex'>einen</span>: <span class='ex'>Ich kaufe den Käse.</span> <span class='ex'>Wir brauchen einen Apfel.</span></p><p>Die and das words don't change.</p><p><span class='ex'>kein</span> = no, not a: <span class='ex'>Ich esse kein Fleisch.</span></p>",
+  words:[["der Käse","cheese"],["das Fleisch","meat"],["der Fisch","fish"],["das Obst","fruit"],["das Gemüse","vegetables"],["die Kartoffel","potato"],["die Tomate","tomato"],["das Ei","egg"],["die Eier","eggs"],["die Banane","banana"],["den","the (der words, as object)"],["kein","no, not a (der/das words)"],["das Kilo","kilo"],["frisch","fresh"]],
+  sents:[["Ich kaufe den Käse.","I am buying the cheese.",{en:["I buy the cheese."]}],["Wir brauchen einen Apfel.","We need an apple."],["Ich esse kein Fleisch.","I don't eat meat.",{en:["I do not eat meat.","I eat no meat."]}],["Das Obst ist frisch.","The fruit is fresh."],["Ein Kilo Tomaten, bitte.","A kilo of tomatoes, please."],["Hast du die Eier?","Do you have the eggs?"],["Ich mag den Fisch.","I like the fish."]]},
+
+ {title:"Telling time", color:"#2b70c9",
+  tip:"<p><span class='ex'>Wie spät ist es?</span> = What time is it? <span class='ex'>Es ist drei Uhr.</span></p><p>Careful: <span class='ex'>halb vier</span> means 3:30 (half way <b>to</b> four).</p><p><span class='ex'>Viertel nach acht</span> = 8:15, <span class='ex'>Viertel vor neun</span> = 8:45.</p>",
+  words:[["Wie spät ist es?","What time is it?"],["halb","half (halb vier = 3:30)"],["Viertel nach","quarter past"],["Viertel vor","quarter to"],["die Minute","minute"],["die Stunde","hour"],["der Termin","appointment"],["der Morgen","morning"],["der Mittag","noon"],["der Abend","evening"],["die Nacht","night"]],
+  sents:[["Wie spät ist es?","What time is it?"],["Es ist drei Uhr.","It is three o'clock.",{en:["It's three o'clock."]}],["Es ist halb vier.","It is half past three.",{en:["It's half past three.","It is three thirty.","It's three thirty."]}],["Es ist Viertel nach acht.","It is a quarter past eight.",{en:["It's a quarter past eight.","It is quarter past eight.","It's quarter past eight."]}],["Der Termin ist um zehn Uhr.","The appointment is at ten o'clock.",{en:["The appointment is at ten."]}],["Ich habe eine Stunde Zeit.","I have an hour.",{en:["I have one hour."]}],["Am Abend lese ich.","In the evening I read.",{de:["Ich lese am Abend."],en:["I read in the evening."]}]]},
+
+ {title:"Feelings", color:"#ce82ff",
+  tip:"<p>Most feelings use <span class='ex'>sein</span>: <span class='ex'>Ich bin glücklich.</span></p><p>Fear uses <span class='ex'>haben</span>: <span class='ex'>Ich habe Angst.</span> = I'm afraid.</p><p><span class='ex'>Wie geht es dir?</span> = How are you? Answer: <span class='ex'>Es geht mir gut.</span> = I'm fine.</p>",
+  words:[["glücklich","happy"],["traurig","sad"],["froh","glad"],["nervös","nervous"],["wütend","angry"],["ruhig","calm, quiet"],["gestresst","stressed"],["die Angst","fear"],["die Liebe","love"],["lieben","to love"],["Wie geht es dir?","How are you?"],["Es geht mir gut.","I'm fine."]],
+  sents:[["Ich bin sehr glücklich.","I am very happy.",{en:["I'm very happy."]}],["Warum bist du traurig?","Why are you sad?"],["Wie geht es dir?","How are you?"],["Es geht mir gut, danke.","I'm fine, thanks.",{en:["I am fine, thanks.","I'm doing well, thanks."]}],["Sie ist nervös.","She is nervous."],["Ich habe keine Angst.","I'm not afraid.",{en:["I am not afraid.","I have no fear."]}],["Ich liebe meine Familie.","I love my family."]]},
+
+ {title:"Make plans", color:"#ff9600",
+  tip:"<p>Talk about the future with the present tense plus a time word: <span class='ex'>Morgen besuche ich meine Mutter.</span></p><p><span class='ex'>Wollen wir...?</span> = Shall we...? <span class='ex'>ins</span> = into the: <span class='ex'>ins Kino</span> = to the movies.</p><p><span class='ex'>Hast du Zeit?</span> = Are you free?</p>",
+  words:[["der Plan","plan"],["das Kino","movie theater"],["ins","into the, to the"],["das Restaurant","restaurant"],["der Urlaub","vacation"],["nächste","next"],["vielleicht","maybe"],["später","later"],["treffen","to meet"],["uns","us, each other"],["natürlich","of course"],["sicher","sure, safe"]],
+  sents:[["Hast du morgen Zeit?","Are you free tomorrow?",{en:["Do you have time tomorrow?"]}],["Wollen wir ins Kino gehen?","Shall we go to the movies?",{en:["Should we go to the movies?","Shall we go to the cinema?"]}],["Nächste Woche habe ich Urlaub.","Next week I have vacation.",{de:["Ich habe nächste Woche Urlaub."],en:["I have vacation next week.","I am on vacation next week."]}],["Vielleicht später.","Maybe later."],["Wir treffen uns um acht Uhr.","We are meeting at eight o'clock.",{en:["We're meeting at eight.","We meet at eight o'clock."]}],["Morgen besuche ich meine Mutter.","Tomorrow I am visiting my mother.",{de:["Ich besuche morgen meine Mutter."],en:["I am visiting my mother tomorrow.","Tomorrow I visit my mother."]}],["Ja, natürlich!","Yes, of course!"]]}
+
 
 ];
+const SECTIONS = [{start:0, title:"Beginner basics"}, {start:20, title:"Everyday German"}];
 const LESSONS_PER_UNIT = 4; // lesson 4 = unit review
 const KNOWN_UNITS = 8;      // matches Duolingo progress: units 1-8 done, start at unit 9
 
 /* ============ STATE ============ */
 const KEY = "meinDeutsch.v1";
-const today = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
-const yesterday = () => { const d=new Date(); d.setDate(d.getDate()-1); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const ymd = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const addDays = n => { const d=new Date(); d.setDate(d.getDate()+n); return ymd(d); };
+const today = () => addDays(0);
+const yesterday = () => addDays(-1);
 function freshState(){
   const done = {}; for(let u=0;u<KNOWN_UNITS;u++) done[u]=LESSONS_PER_UNIT;
-  return {xp:0, streak:0, lastDay:null, dayXp:0, xpDay:null, goal:20, listen:true, rate:0.9, done, mistakes:{}, seen:{}, lessons:0, askedCarry:false, remind:{on:false, time:"19:00", id:null}};
+  return {xp:0, streak:0, lastDay:null, dayXp:0, xpDay:null, goal:20, listen:true, rate:0.9, done, mistakes:{}, seen:{}, srs:{}, speak:true, noSpeakUntil:0, lessons:0, askedCarry:false, remind:{on:false, time:"19:00", id:null}};
 }
 let S;
 try { S = Object.assign(freshState(), JSON.parse(localStorage.getItem(KEY)||"null")||{}); } catch(e){ S = freshState(); }
+if(!S.srs) S.srs = {};
+if(S.speak===undefined) S.speak = true;
 if(!S.uid) S.uid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2);
 if(!S.remind || typeof S.remind!=="object") S.remind = {on:false, time:"19:00", id:null};
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
@@ -375,7 +444,11 @@ function renderLearn(){
   const pos = currentPos();
   const offsets = [0,-60,-90,-60,0,60,90,60];
   let html = "";
+  const due = dueWords().length;
+  if(due) html += `<div class="reviewcard"><div>🔁 ${due} word${due>1?"s":""} ready for review<small>Review now so you don't forget them</small></div><button id="reviewNow">Review</button></div>`;
   UNITS.forEach((un,u)=>{
+    const sec = SECTIONS.findIndex(s=>s.start===u);
+    if(sec>=0) html += `<div class="section"><b>Section ${sec+1}</b><span>${esc(SECTIONS[sec].title)}</span></div>`;
     html += `<div class="unit" id="unit-${u}"><div class="banner" style="background:${un.color}">
       <div><small>Unit ${u+1}</small><b>${esc(un.title)}</b></div>
       <button data-guide="${u}" aria-label="Guidebook">📒</button></div><div class="nodes">`;
@@ -390,8 +463,9 @@ function renderLearn(){
     }
     html += `</div></div>`;
   });
-  html += `<div class="pad" style="text-align:center;color:var(--muted)">Section 1 complete when you reach the end. More coming! 💪</div>`;
+  html += `<div class="pad" style="text-align:center;color:var(--muted)">Section 2 complete when you reach the end. More coming! 💪</div>`;
   $("#tab-learn").innerHTML = html;
+  const rn=$("#reviewNow"); if(rn) rn.onclick=()=>startLesson({mode:"review"});
 }
 $("#tab-learn").addEventListener("click", e=>{
   const g = e.target.closest("[data-guide]"); if(g){ openGuide(+g.dataset.guide); return; }
@@ -415,7 +489,11 @@ function openGuide(u){
 function unlockedWords(){ const out=[]; UNITS.forEach((un,u)=>{ if(unlockedUnit(u)) un.words.forEach(w=>out.push({w,u})); }); return out; }
 function renderPractice(){
   const weak = Object.keys(S.mistakes).filter(k=>S.mistakes[k]>0).length;
+  const due = dueWords().length;
   $("#tab-practice").innerHTML = `<h2>Practice</h2>
+    <div class="card"><b style="font-size:19px">🔁 Spaced review</b><p style="color:var(--muted)">${due?`${due} word${due>1?"s are":" is"} due. Each word comes back right before you'd forget it.`:"Nothing due right now. Come back tomorrow!"}</p>
+      <button class="btn blue" id="pReview" ${due?"":"disabled"}>Review ${Math.min(due,12)||""} words</button></div>
+    ${SRec?`<div class="card"><b style="font-size:19px">🗣️ Speaking practice</b><p style="color:var(--muted)">Read sentences out loud and get checked on your pronunciation.</p><button class="btn" id="pSpeak">Start +10 XP</button></div>`:""}
     <div class="card"><b style="font-size:19px">🧠 Mistakes review</b><p style="color:var(--muted)">${weak?`${weak} word${weak>1?"s":""} you've missed. Clear them by getting them right.`:"No missed words right now. Nice work!"}</p>
       <button class="btn red" id="pMist" ${weak?"":"disabled"}>Review mistakes</button></div>
     <div class="card"><b style="font-size:19px">💬 Chat with Lena</b><p style="color:var(--muted)">Real conversation practice with your AI tutor. 5 messages counts as a lesson.</p>
@@ -424,14 +502,18 @@ function renderPractice(){
       <button class="btn blue" id="pMix">Start +10 XP</button></div>
     ${canSpeak?`<div class="card"><b style="font-size:19px">🎧 Listening only</b><p style="color:var(--muted)">Hear German, pick or build what was said.</p><button class="btn" id="pListen">Start +10 XP</button></div>`:""}`;
   $("#pMix").onclick = ()=>startLesson({mode:"mix"});
+  const pr=$("#pReview"); if(pr) pr.onclick=()=>startLesson({mode:"review"});
+  const ps=$("#pSpeak"); if(ps) ps.onclick=()=>{ if(!speakOK()){ S.noSpeakUntil=0; S.speak=true; save(); } startLesson({mode:"speak"}); };
   $("#pTutor").onclick = ()=>document.querySelector('.nav button[data-tab="tutor"]').click();
   const pm=$("#pMist"); if(pm) pm.onclick = ()=>startLesson({mode:"mistakes"});
   const pl=$("#pListen"); if(pl) pl.onclick = ()=>startLesson({mode:"listen"});
 }
 function renderWords(){
   const list = unlockedWords();
+  const strong = list.filter(({w})=>(S.srs[wordKey(w)]||{}).lvl>=5).length;
   $("#tab-words").innerHTML = `<h2>My words <span style="color:var(--muted);font-size:18px">(${list.length})</span></h2>
-   <div class="card">${list.map(({w})=>`<div class="wordrow"><button class="spk" data-say="${esc(w[0])}">🔊</button><div><b>${esc(w[0])}</b><small>${esc(w[1])}</small></div>${S.mistakes[wordKey(w)]>0?'<span class="dot" title="needs practice"></span>':""}</div>`).join("")}</div>`;
+   <p style="color:var(--muted);margin-top:-6px">💪 ${strong} strong · bars show how well each word has stuck</p>
+   <div class="card">${list.map(({w})=>`<div class="wordrow"><button class="spk" data-say="${esc(w[0])}">🔊</button><div><b>${esc(w[0])}</b><small>${esc(w[1])}</small></div>${strengthHtml(w)}</div>`).join("")}</div>`;
 }
 $("#tab-words").addEventListener("click", e=>{ const s=e.target.closest("[data-say]"); if(s) speak(s.dataset.say); });
 /* ============ STREAK CARRY-OVER ============ */
@@ -513,6 +595,8 @@ function renderMe(){
      ${S.remind.on?`<div class="row" style="margin-top:12px"><button class="btn ghost" id="remTest">Send test</button><button class="btn ghost" id="remOff">Turn off</button></div>`:""}</div>
    <div class="card"><b>Daily goal</b><p style="color:var(--muted);margin:6px 0 10px">${dayXp()} / ${S.goal} XP today</p>
      <div class="seg" id="goalSeg">${[10,20,30,50].map(g=>`<button data-g="${g}" class="${S.goal===g?"on":""}">${g}</button>`).join("")}</div></div>
+   <div class="card"><b>Speaking exercises</b><p style="color:var(--muted);margin:6px 0 10px">${SRec?"Read German out loud and the mic checks you. Turn off when you can't talk.":"This browser can't listen to speech, so speaking is off."}</p>
+     <div class="seg" id="speakSeg"><button data-v="1" class="${S.speak?"on":""}">On</button><button data-v="0" class="${!S.speak?"on":""}">Off</button></div></div>
    <div class="card"><b>Listening exercises</b><p style="color:var(--muted);margin:6px 0 10px">${canSpeak?"Turn off when you can't use sound.":"Your browser has no speech voice, so listening is off."}</p>
      <div class="seg" id="listenSeg"><button data-v="1" class="${S.listen?"on":""}">On</button><button data-v="0" class="${!S.listen?"on":""}">Off</button></div>
      <p style="color:var(--muted);margin:14px 0 10px">Voice speed</p>
@@ -524,10 +608,11 @@ function renderMe(){
      <button class="btn blue" style="margin-top:12px" id="startSet">Set starting point</button></div>
    <button class="btn ghost" id="resetBtn">Reset all progress</button>`;
   $("#goalSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; S.goal=+b.dataset.g; save(); renderMe(); renderHeader(); };
+  $("#speakSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; S.speak=b.dataset.v==="1"; S.noSpeakUntil=0; save(); renderMe(); };
   $("#listenSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; S.listen=b.dataset.v==="1"; save(); renderMe(); };
   $("#rateSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; S.rate=+b.dataset.r; save(); renderMe(); speak("Guten Morgen! Wie geht's?"); };
   $("#testVoice").onclick = ()=>{ speak("Hallo! Ich lerne Deutsch."); if(canSpeak && !deVoice) toast("No German voice found. Install German in your phone's text-to-speech settings."); };
-  $("#startSet").onclick = ()=>{ const t=+$("#startSel").value; for(let u=0;u<UNITS.length;u++){ if(u<t) S.done[u]=LESSONS_PER_UNIT; else S.done[u]=0; } save(); refresh(); toast("Starting point set to Unit "+(t+1)); };
+  $("#startSet").onclick = ()=>{ const t=+$("#startSel").value; for(let u=0;u<UNITS.length;u++){ if(u<t) S.done[u]=LESSONS_PER_UNIT; else S.done[u]=0; } seedSrs(); refresh(); toast("Starting point set to Unit "+(t+1)); };
   wireStreakForm($("#tab-me"));
   $("#remOn").onclick = async ()=>{ const b=$("#remOn"); b.disabled=true; b.textContent="Working...";
     try{ await enableReminders($("#remTime").value||"19:00"); toast("Reminders on! 🔔"); }catch(err){ toast(String(err.message||err)); }
@@ -548,6 +633,51 @@ document.querySelector(".nav").addEventListener("click", e=>{
 });
 function refresh(){ renderHeader(); renderLearn(); renderPractice(); renderWords(); renderMe(); }
 
+/* ============ SPACED REVIEW ============ */
+// Each word has a level 0-8. Right answers push the next review further out; misses bring it back today.
+const SRS_INT = [0,1,2,4,7,14,30,60,120];
+const WORD_BY_KEY = {}; UNITS.forEach((un,u)=>un.words.forEach(w=>WORD_BY_KEY[wordKey(w)]={w,u}));
+function srsGrade(w, ok, soft){
+  const k=wordKey(w), st=S.srs[k];
+  if(soft && st && st.due>today()) return;          // sentence practice only counts for words that are due
+  if(ok){ const lvl=Math.min((st?st.lvl:0)+1, SRS_INT.length-1); S.srs[k]={lvl, due:addDays(SRS_INT[lvl])}; }
+  else { const lvl=Math.max(1, Math.floor((st?st.lvl:1)/2)); S.srs[k]={lvl, due:today()}; }
+}
+function seedSrs(){ // words from finished units start mid-strength, spread over the next two weeks
+  UNITS.forEach((un,u)=>{ if((S.done[u]||0)>=LESSONS_PER_UNIT) un.words.forEach(w=>{ const k=wordKey(w);
+    if(!S.srs[k]){ let h=0; for(const c of k) h=(h*31+c.charCodeAt(0))>>>0; S.srs[k]={lvl:3, due:addDays(h%14)}; } }); });
+  save();
+}
+function dueWords(){
+  const t=today();
+  return Object.entries(S.srs).filter(([k,st])=>st.due<=t && WORD_BY_KEY[k] && unlockedUnit(WORD_BY_KEY[k].u))
+    .sort((a,b)=> a[1].due<b[1].due?-1: a[1].due>b[1].due?1: a[1].lvl-b[1].lvl).map(([k])=>WORD_BY_KEY[k].w);
+}
+function strengthHtml(w){ const st=S.srs[wordKey(w)]; const n=st?Math.min(4,Math.ceil(st.lvl/2)):0;
+  return `<span class="str" title="strength">${[0,1,2,3].map(i=>`<i class="${i<n?"on":""}"></i>`).join("")}</span>`; }
+function wordsInSentence(sent, pool){
+  const toks=new Set(norm(sent).replace(/'/g,"").split(" "));
+  return pool.filter(w=>{ const core=norm(w[0].replace(ART,"")).replace(/'/g,""); return core.split(" ").every(t=>toks.has(t)); });
+}
+function exWords(e){ if(e.w) return [e.w]; if(e.words) return e.words; if(e.s) return wordsInSentence(e.s[0], L.P.allWords); return []; }
+
+/* ============ SPEAKING ============ */
+const SRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+function speakOK(){ return !!SRec && S.speak!==false && Date.now() > (S.noSpeakUntil||0); }
+const NUMWORDS = {0:"null",1:"ein",2:"zwei",3:"drei",4:"vier",5:"fünf",6:"sechs",7:"sieben",8:"acht",9:"neun",10:"zehn",11:"elf",12:"zwölf",13:"dreizehn",20:"zwanzig",30:"dreißig",100:"hundert"};
+function speechNorm(s){ return norm(s).replace(/'/g,"").replace(/\d+/g,d=>NUMWORDS[d]||d).replace(/ß/g,"ss").split(" ").filter(Boolean); }
+function lev(a,b){ const m=a.length,n=b.length; if(!m) return n; if(!n) return m; let prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){ const cur=[i]; for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); prev=cur; } return prev[n]; }
+const ONE = /^(ein|eine|einen|eins|1)$/;
+function wordMatch(x,w){ return x===w || (ONE.test(x)&&ONE.test(w)) || (w.length>=5 && lev(x,w)<=Math.floor(w.length/5)); }
+function speechScore(target, heard){
+  const t=speechNorm(target), hw=speechNorm(heard), used=new Set();
+  const marks=t.map(w=>{ const i=hw.findIndex((x,j)=>!used.has(j)&&wordMatch(x,w)); if(i>=0){ used.add(i); return true; } return false; });
+  const ratio = marks.filter(Boolean).length/Math.max(1,t.length);
+  const a=t.join(" "), b=hw.join(" "); const charSim = 1 - lev(a,b)/Math.max(1,a.length);
+  return {ok: Math.max(ratio,charSim) >= 0.8, marks, score: Math.round(100*Math.max(ratio,charSim))};
+}
+
 /* ============ LESSON ENGINE ============ */
 let L = null; // current lesson
 function poolFor(opts){
@@ -556,6 +686,7 @@ function poolFor(opts){
     let words=[], sents=[];
     units.forEach(u=>{ words=words.concat(UNITS[u].words); sents=sents.concat(UNITS[u].sents); });
     if(opts.mode==="mistakes"){ words = words.filter(w=>S.mistakes[wordKey(w)]>0); }
+    if(opts.mode==="review"){ words = dueWords().slice(0,12); }
     return {words, sents, allWords:units.flatMap(u=>UNITS[u].words), allSents:units.flatMap(u=>UNITS[u].sents)};
   }
   const un = UNITS[opts.unit];
@@ -576,14 +707,28 @@ function buildExercises(opts){
     P.words.filter(w=>!S.seen[wordKey(w)] && opts.unit>=KNOWN_UNITS).slice(0,5).forEach(w=>ex.push({t:"new", w}));
   }
   let plan;
-  if(opts.mode==="listen") plan = ["listen","lbuild","listen","lbuild","mc_de","lbuild","listen","lbuild","listen","lbuild"];
+  const SPK = speakOK();
+  if(opts.mode==="review"){
+    const cycle=["mc_en","listen","mc_de","speak","article"];
+    plan = P.words.map((w,i)=>cycle[i%cycle.length]);
+    P.words.forEach((w,i)=>{ let t=plan[i];
+      if(t==="article" && !ART.test(w[0])) t="mc_en";
+      if(t==="listen" && !listenOK) t="mc_de";
+      if(t==="speak" && !SPK) t="mc_en";
+      ex.push(t==="listen"? {t, w, s:null} : {t, w});
+    });
+    if(P.words.length>=4) ex.push({t:"match", words:pick(P.words, Math.min(5,P.words.length))});
+    return {ex: shuffle(ex), P};
+  }
+  if(opts.mode==="speak") plan = ["speak","speak","speak","speak","speak","speak","speak","speak"];
+  else if(opts.mode==="listen") plan = ["listen","lbuild","listen","lbuild","mc_de","lbuild","listen","lbuild","listen","lbuild"];
   else if(opts.mode==="mistakes") plan = ["mc_en","mc_de","article","mc_en","match","mc_de","mc_en","article","mc_de","build_de"];
   else if(opts.mode) plan = ["mc_en","build_de","listen","article","match","build_en","mc_de","lbuild","build_de","mc_en"];
   else plan = [
-    ["mc_de","mc_en","article","match","listen","mc_en","build_de","mc_de","article","build_en","lbuild","build_de"],
-    ["mc_en","build_de","article","listen","build_en","match","mc_de","lbuild","build_de","article","build_en","mc_en"],
-    ["build_de","build_en","lbuild","article","build_de","match","listen","build_en","mc_en","build_de","lbuild","build_de"],
-    ["match","build_de","mc_en","article","lbuild","build_en","listen","build_de","mc_de","build_en","article","build_de"]
+    ["mc_de","mc_en","article","match","listen","mc_en","build_de","speak","article","build_en","lbuild","build_de"],
+    ["mc_en","build_de","article","listen","speak","match","mc_de","lbuild","build_de","article","build_en","mc_en"],
+    ["build_de","build_en","lbuild","speak","build_de","match","listen","build_en","mc_en","build_de","speak","build_de"],
+    ["match","build_de","mc_en","article","lbuild","speak","listen","build_de","mc_de","build_en","article","build_de"]
   ][opts.lesson];
   const wq = shuffle(P.words), sq = shuffle(P.sents);
   let wi=0, si=0;
@@ -591,6 +736,9 @@ function buildExercises(opts){
   const nextS = () => sq.length ? sq[(si++)%sq.length] : null;
   plan.forEach(t=>{
     if((t==="listen"||t==="lbuild") && !listenOK) t = t==="listen" ? "mc_de" : "build_de";
+    if(t==="speak" && !SPK) t = opts.mode==="speak" ? null : "build_de";
+    if(!t) return;
+    if(t==="speak"){ const s = P.sents.length ? nextS() : null; if(s) ex.push({t, s}); else { const w=nextW(); if(w) ex.push({t, w}); } return; }
     if(t==="article" && !nouns.length) t="mc_en";
     if((t.startsWith("build")||t==="lbuild") && !P.sents.length) t="mc_en";
     if(t==="match" && P.words.length<4) t="mc_de";
@@ -631,7 +779,7 @@ function nextExercise(){
   const e = L.cur = L.queue.shift(); L.answered=false; L.sel=null;
   setFoot("", "");
   const body = $("#lbody"); body.scrollTop=0;
-  ({new:rNew, mc_de:rMC, mc_en:rMC, article:rArticle, match:rMatch, listen:rListen, build_de:rBuild, build_en:rBuild, lbuild:rBuild})[e.t](e, body);
+  ({new:rNew, mc_de:rMC, mc_en:rMC, article:rArticle, match:rMatch, listen:rListen, build_de:rBuild, build_en:rBuild, lbuild:rBuild, speak:rSpeak})[e.t](e, body);
 }
 
 function rNew(e, body){
@@ -689,7 +837,7 @@ function rMatch(e, body){
   body.innerHTML = `<div class="qtitle">Tap the matching pairs</div><div class="grid2">
     <div class="choices">${left.map(w=>`<button class="choice" style="text-align:center" data-side="L" data-k="${esc(w[0])}">${esc(w[0])}</button>`).join("")}</div>
     <div class="choices">${right.map(w=>`<button class="choice" style="text-align:center" data-side="R" data-k="${esc(w[0])}">${esc(w[1])}</button>`).join("")}</div></div>`;
-  let selL=null, selR=null, matched=0, errors=0;
+  let selL=null, selR=null, matched=0, errors=0; e.bad=new Set();
   setCheck("Check", false, null);
   body.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{
     if(b.classList.contains("gone")) return;
@@ -698,9 +846,9 @@ function rMatch(e, body){
     if(selL && selR){
       const a=selL, c=selR; selL=selR=null;
       if(a.dataset.k===c.dataset.k){ [a,c].forEach(x=>{x.classList.remove("sel");x.classList.add("right");}); setTimeout(()=>[a,c].forEach(x=>x.classList.add("gone")),250); matched++;
-        if(matched===e.words.length){ chime(true); grade(errors===0, "", errors?[]:[], true); } }
+        if(matched===e.words.length){ chime(true); grade(true, "", [], true, errors>0); } }
       else { errors++; chime(false); [a,c].forEach(x=>{x.classList.remove("sel");x.classList.add("wrong","shake");}); setTimeout(()=>[a,c].forEach(x=>x.classList.remove("wrong","shake")),450);
-        const w=e.words.find(w=>w[0]===a.dataset.k); if(w){ S.mistakes[wordKey(w)]=(S.mistakes[wordKey(w)]||0)+1; } }
+        const w=e.words.find(w=>w[0]===a.dataset.k); if(w){ S.mistakes[wordKey(w)]=(S.mistakes[wordKey(w)]||0)+1; e.bad.add(w[0]); } }
     }
   });
 }
@@ -734,15 +882,68 @@ function rBuild(e, body){
     const ok = answers.some(a=>norm(a)===given);
     if(ok && !toDe) speak(s[0]);
     if(ok && toDe && e.t!=="lbuild") speak(s[0]);
-    const relWords = L.P.allWords.filter(w=>{ const core=norm(w[0].replace(ART,"")); return norm(s[0]).split(" ").includes(core.split(" ")[0]); });
-    grade(ok, answers[0], ok?[]:relWords.slice(0,3));
+    grade(ok, answers[0], ok?[]:wordsInSentence(s[0], L.P.allWords).slice(0,3));
   }
 }
 
-function grade(ok, answerText, words, isMatch){
+function rSpeak(e, body){
+  const target = e.s ? e.s[0] : e.w[0];
+  const en = e.s ? e.s[1] : e.w[1];
+  const toks = tokens(target);
+  body.innerHTML = `<div class="qtitle">Speak this ${e.s?"sentence":"word"}</div>
+    <div class="prompt"><button class="smallspk" id="say">🔊</button><div class="bubble"><div id="tgt" style="font-size:21px;font-weight:800">${toks.map((t,i)=>`<span data-i="${i}">${esc(t)}</span>`).join(" ")}</div>
+      <div style="color:var(--muted);font-size:15px;margin-top:4px">${esc(en)}</div></div></div>
+    <div style="text-align:center;margin-top:28px"><button class="micbig" id="mic" aria-label="Tap to speak">🎤</button>
+      <div id="heard" style="margin-top:16px;color:var(--muted);min-height:50px;font-size:17px">Tap the mic and read it out loud</div>
+      <button class="linkbtn" id="cant">Can't speak now</button></div>`;
+  $("#say").onclick=()=>speak(target); setTimeout(()=>speak(target),300);
+  let tries=0, rec=null;
+  const skip = ()=>{ if(rec) try{rec.abort();}catch(_){}; L.total--; nextExercise(); };
+  setCheck("Skip", true, skip);
+  $("#cant").onclick=()=>{ S.noSpeakUntil = Date.now()+15*60*1000; save();
+    const before=L.queue.length; L.queue = L.queue.filter(x=>x.t!=="speak"); L.total -= (before-L.queue.length);
+    toast("Speaking is off for 15 minutes"); skip(); };
+  const mic=$("#mic"), heard=$("#heard");
+  mic.onclick=()=>{
+    if(L.answered) return;
+    if(rec){ try{rec.stop();}catch(_){}; return; }
+    try{
+      rec = new SRec(); rec.lang="de-DE"; rec.interimResults=true; rec.maxAlternatives=3;
+      let final=null;
+      rec.onresult = ev=>{
+        const r = ev.results[ev.results.length-1];
+        if(!r.isFinal){ heard.textContent = r[0].transcript; return; }
+        let best=null; for(let i=0;i<r.length;i++){ const sc=speechScore(target, r[i].transcript); if(!best||sc.score>best.sc.score) best={sc, text:r[i].transcript}; }
+        final=best;
+      };
+      rec.onerror = ev=>{ heard.textContent = ev.error==="no-speech" ? "I didn't hear anything. Tap the mic and try again."
+        : ev.error==="not-allowed" ? "Allow the microphone for this app, or tap Can't speak now."
+        : ev.error==="network" ? "Speech check needs internet. Try again or tap Skip." : "Something went wrong. Try again."; };
+      rec.onend = ()=>{ rec=null; mic.classList.remove("live");
+        if(!final) return;
+        const {sc, text} = final; tries++;
+        document.querySelectorAll("#tgt span").forEach((sp,i)=>{ sp.classList.toggle("hit", !!sc.marks[i]); sp.classList.toggle("miss", !sc.marks[i]); });
+        heard.innerHTML = `I heard: <b style="color:var(--text)">${esc(text)}</b>`;
+        if(sc.ok){ grade(true, target); }
+        else if(tries<2){ chime(false); heard.innerHTML += `<div style="color:var(--orange);margin-top:6px">Almost! Listen 🔊 and try once more.</div>`; }
+        else { grade(false, target); }
+      };
+      mic.classList.add("live"); heard.textContent="Listening..."; rec.start();
+    }catch(err){ rec=null; mic.classList.remove("live"); heard.textContent="Voice input isn't available here. Tap Skip."; }
+  };
+}
+
+function grade(ok, answerText, words, isMatch, hadErr){
   L.answered = true;
   if(!isMatch) chime(ok);
   const e = L.cur;
+  // spaced review bookkeeping (first try only)
+  if(!L.missed.has(e)){
+    if(e.t==="match") e.words.forEach(w=>srsGrade(w, !(e.bad && e.bad.has(w[0]))));
+    else if(e.w) srsGrade(e.w, ok);
+    else if(e.s && ok) wordsInSentence(e.s[0], L.P.allWords).forEach(w=>srsGrade(w, true, true));
+  }
+  if(hadErr) L.missed.add(e);
   if(ok){
     if(!L.missed.has(e)) L.firstTry++;
     L.doneCount++;
@@ -780,6 +981,7 @@ function finishLesson(){
   const o=L.opts;
   if(!o.mode && (S.done[o.unit]||0)===o.lesson) S.done[o.unit]=o.lesson+1;
   const {streakUp, goalHit} = creditPractice(gain);
+  if(!o.mode && o.lesson===LESSONS_PER_UNIT-1) seedSrs();
   const unitDone = !o.mode && o.lesson===LESSONS_PER_UNIT-1;
   $("#progBar").style.width="100%";
   $("#lbody").innerHTML = `<div class="endwrap">
@@ -876,6 +1078,7 @@ async function tutorSend(text){
 }
 
 /* ============ BOOT ============ */
+seedSrs();
 refresh();
 setTimeout(maybeAskCarry, 400);
 setTimeout(()=>{ const p=currentPos(); const el=document.getElementById("unit-"+p.u); if(el) el.scrollIntoView({block:"start"}); }, 50);
