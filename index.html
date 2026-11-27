@@ -33,7 +33,7 @@ button{font-family:inherit;color:inherit}
 .goalring{width:30px;height:30px}
 
 /* path */
-.screen{padding-bottom:96px}
+.screen,.screen.pad{padding-bottom:calc(var(--navh,96px) + 28px)}
 .unit{margin:18px 16px 8px;scroll-margin-top:72px}
 .banner{border-radius:16px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;
   box-shadow:0 4px 0 rgba(0,0,0,.25)}
@@ -145,7 +145,7 @@ h2{margin:6px 0 14px;font-size:24px}
 .chathead{display:flex;align-items:center;gap:12px;padding:12px 16px 0}
 .avatar{width:46px;height:46px;border-radius:50%;background:#ce82ff;display:flex;align-items:center;justify-content:center;font-size:24px;flex:none}
 .chatgoal{flex:1}.chatgoal small{color:var(--muted);font-weight:700}
-.chat{padding:8px 16px 180px;display:flex;flex-direction:column;gap:10px}
+.chat{padding:8px 16px calc(var(--navh,96px) + 100px);display:flex;flex-direction:column;gap:10px}
 .msg{max-width:86%;padding:11px 14px;border-radius:16px;font-size:17px;line-height:1.4;word-wrap:break-word}
 .msg.me{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:4px}
 .msg.ai{align-self:flex-start;background:var(--card);border:2px solid var(--line);border-bottom-left-radius:4px}
@@ -1078,6 +1078,8 @@ async function tutorSend(text){
 }
 
 /* ============ BOOT ============ */
+function fitNav(){ const n=document.querySelector(".nav"); if(n) document.documentElement.style.setProperty("--navh", n.offsetHeight+"px"); }
+fitNav(); window.addEventListener("resize", fitNav); setTimeout(fitNav, 500);
 seedSrs();
 refresh();
 setTimeout(maybeAskCarry, 400);
